@@ -397,7 +397,7 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015150836" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015152047" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
@@ -547,18 +547,21 @@ function mergeStellungnahmen(target, source, log) {
 async function init() {
   const seed = await loadSeed();
   const local = safeParse(localStorage.getItem(STORE_KEY));
-  if (local && local.schema_version === SCHEMA_VERSION) {
+  if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
+    const merged = structuredClone(seed);
+    merged.historie = local.historie || [];
+    for (const r of merged.rechnungen) {
+      const lr = (local.rechnungen || []).find(x => x.id === r.id);
+      if (lr?.stellungnahme_an_abgeschlossen) r.stellungnahme_an_abgeschlossen = lr.stellungnahme_an_abgeschlossen;
+    }
+    mergeStellungnahmen(merged, local, false);
+    merged.meta.seed_generiert_am = seed.meta.generiert_am;
+    db = merged; saveLocal();
+  } else if (local && local.schema_version === SCHEMA_VERSION) {
     db = local;
     if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
         JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
-      if (IS_AN) {
-        const merged = structuredClone(seed);
-        merged.historie ||= [];
-        const n = mergeStellungnahmen(merged, local, false);
-        merged.meta.seed_generiert_am = seed.meta.generiert_am;
-        db = merged; saveLocal();
-        toast(`Aktueller Prüfstand geladen${n ? ` – ${n} Ihrer bisherigen Stellungnahmen wurden übernommen` : ""}.`, "ok");
-      } else {
+      {
         banner(`Neuere Datenbasis aus <code>build_audit.py</code> vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}).
           Im Browser sind abweichende Bearbeitungsstände gespeichert.`, "", [
           ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
