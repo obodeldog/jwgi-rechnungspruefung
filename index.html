@@ -292,8 +292,8 @@
 
   <details class="hist card no-print pruefer-only" id="hist"></details>
   <p class="foot-note no-print pruefer-only">
-    Daten: <code>audit_data.json</code> / <code>audit_data.js</code> (erzeugt mit <code>build_audit.py</code>). Änderungen werden automatisch im Browser
-    gespeichert. Für die Excel-Ausgabe den JSON-Export im Projektordner ablegen und <code>python build_audit.py --import audit_data.json</code> ausführen.
+    Änderungen werden automatisch im Browser gespeichert. Für Excel, PDF-Prüfvermerk und Online-Stand: „⤓ JSON exportieren“ klicken
+    und im Projektordner <code>Aktualisieren.bat</code> doppelklicken.
   </p>
 </main>
 
@@ -337,7 +337,7 @@
         <label>EP lt. Rechnung<input name="ep" inputmode="decimal" required></label>
       </div>
     </fieldset>
-    <div class="note">Neue OZ, die nicht im LV stehen, werden als Nachtrag in den Katalog übernommen und von <code>build_audit.py</code> im Reiter „Mitsch“ eingefügt.</div>
+    <div class="note">Neue OZ, die nicht im LV stehen, werden als Nachtrag in den Katalog übernommen und beim Aktualisieren im LV-Reiter der Excel eingefügt.</div>
     <div class="actions"><button class="btn" value="cancel" formnovalidate>Abbrechen</button><button class="btn primary" value="ok">Hinzufügen</button></div>
   </form>
 </dialog>
@@ -397,14 +397,15 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015153317" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015161818" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
 const ROLE = PUBLIC_SITE || new URLSearchParams(location.search).get("role") === "elektriker" ? "elektriker" : "pruefer";
 const IS_AN = ROLE === "elektriker";
 document.body.classList.toggle("role-elektriker", IS_AN);
-const STORE_KEY = "jwgi.rechnungspruefung.mitsch-altbau.v1" + (IS_AN ? ".elektriker" : "");
+const PROJECT_KEY = window.AUDIT_SEED?.projekt?.storage_key || window.AUDIT_SEED_ENC?.storage_key || "mitsch-altbau";
+const STORE_KEY = `jwgi.rechnungspruefung.${PROJECT_KEY}.v1` + (IS_AN ? ".elektriker" : "");
 const SETTINGS_KEY = STORE_KEY + ".settings";
 const SCHEMA_VERSION = 1;
 const AMPEL = { gruen: "Grün", gelb: "Gelb", rot: "Rot", "": "offen" };
@@ -567,7 +568,7 @@ async function init() {
         JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
       banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
         Sie haben im Browser aber noch <b>Änderungen, die nicht exportiert wurden</b>. Tipp: erst „JSON exportieren“ und
-        <code>python update_all.py</code> ausführen – dann wird beides zusammengeführt.`, "", [
+        <code>Aktualisieren.bat</code> doppelklicken – dann wird beides zusammengeführt.`, "", [
         ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
         ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
     }
@@ -575,7 +576,7 @@ async function init() {
     adoptSeed(seed, true);
   } else {
     db = emptyDb();
-    banner("<b>audit_data.js</b> wurde nicht gefunden. Bitte <code>python build_audit.py</code> ausführen oder eine JSON-Datei importieren.", "err");
+    banner("<b>audit_data.js</b> wurde nicht gefunden. Bitte im Projektordner <code>Aktualisieren.bat</code> doppelklicken oder eine JSON-Datei importieren.", "err");
   }
   db.historie ||= [];
   currentId = (db.rechnungen.find(r => r.id === settings.lastInvoice) || db.rechnungen[db.rechnungen.length - 1] || {}).id;
@@ -772,10 +773,13 @@ const KPI_COLS = [["netto", k => "Netto"], ["netto_nach_abgebot", k => `nach ${f
 
 function renderKpis() {
   const i = inv(), k = kond(i), g = sums(i, false), p = sums(i, true);
-  let h = `<div class="h"></div>` + KPI_COLS.map(([, l]) => `<div class="h" style="text-align:right">${l(k)}</div>`).join("");
-  h += `<div class="lbl row-g">Gefordert ${esc(i.kurz)}</div>` + KPI_COLS.map(([key]) => `<div class="v row-g">${eur(g[key])}</div>`).join("");
-  h += `<div class="lbl row-p">Geprüft</div>` + KPI_COLS.map(([key]) => `<div class="v row-p">${eur(p[key])}</div>`).join("");
-  h += `<div class="lbl row-d">Differenz</div>` + KPI_COLS.map(([key]) => `<div class="v row-d">${signed(r2(p[key] - g[key]))}</div>`).join("");
+  const vorher = Number(i.bisherige_zahlungen_brutto) || 0;
+  const cols = vorher ? [...KPI_COLS.slice(0, 3), ["zahlbetrag", () => "nach bisherigen Zahlungen"], KPI_COLS[3]] : KPI_COLS;
+  let h = `<div class="h"></div>` + cols.map(([, l]) => `<div class="h" style="text-align:right">${l(k)}</div>`).join("");
+  h += `<div class="lbl row-g">Gefordert ${esc(i.kurz)}</div>` + cols.map(([key]) => `<div class="v row-g">${eur(g[key])}</div>`).join("");
+  h += `<div class="lbl row-p">Geprüft</div>` + cols.map(([key]) => `<div class="v row-p">${eur(p[key])}</div>`).join("");
+  h += `<div class="lbl row-d">Differenz</div>` + cols.map(([key]) => `<div class="v row-d">${signed(r2(p[key] - g[key]))}</div>`).join("");
+  $("#kpis").style.gridTemplateColumns = `150px repeat(${cols.length}, minmax(0, 1fr))`;
   $("#kpis").innerHTML = h;
 
   const ang = i.angaben_rechnung || {};
@@ -797,7 +801,10 @@ function renderKpis() {
     <div class="small">Zur Abschlagszahlung freigegeben (brutto)</div>
     <div class="big">${eur(p.zahlbetrag)}</div>
     <div class="small">bei Skontoabzug: <b>${eur(p.zahlbetrag_skonto)}</b> · Kürzung ${signed(diff)}${g.zahlbetrag ? ` (${fmt(diff / g.zahlbetrag * 100, 1)} %)` : ""}</div>
-    ${checks.map(([c, t]) => `<div class="chk ${c}"><span class="ic">${c === "ok" ? "✓" : "!"}</span><span>${esc(t)}</span></div>`).join("")}`;
+    ${checks.map(([c, t]) => `<div class="chk ${c}"><span class="ic">${c === "ok" ? "✓" : "!"}</span><span>${esc(t)}</span></div>`).join("")}
+    ${vorher ? `<div class="small" style="margin-top:4px"><b>Bisherige Abschläge (${(i.zahlungen || []).length}): ${eur(vorher)} brutto</b><br>
+      ${(i.zahlungen || []).map(z => `${esc(z.rechnung)} vom ${deDate(z.rechnungsdatum)}: ${eur((z.brutto || 0) + (z.skonto_brutto || 0))}
+        (gezahlt ${deDate(z.datum)}${z.skonto_brutto ? `, inkl. Skonto ${eur(z.skonto_brutto)}` : ""})`).join("<br>")}</div>` : ""}`;
 }
 
 function countStatus(list) {
@@ -1070,7 +1077,7 @@ $("#btn-export").onclick = () => {
   db.meta.lokal_geaendert = false;
   download("audit_data.json", JSON.stringify(db, null, 2) + "\n", "application/json");
   saveLocal();
-  toast("Exportiert. Jetzt python update_all.py ausführen – Ihre Änderungen werden automatisch aus dem Download-Ordner übernommen.", "ok");
+  toast("Exportiert. Jetzt im Projektordner Aktualisieren.bat doppelklicken – Ihre Änderungen werden automatisch aus dem Download-Ordner übernommen.", "ok");
 };
 $("#btn-import").onclick = () => $("#file-import").click();
 $("#file-import").onchange = async e => {
@@ -1129,8 +1136,9 @@ function answersText(i, user) {
 async function uploadAnswers(i, upload, user) {
   const answers = i.positionen.filter(hasAnswer).map(p => ({ oz: p.oz, stellungnahme_an: p.stellungnahme_an.trim() }));
   const open = i.positionen.filter(p => needsAnswer(p) && !hasAnswer(p)).length;
-  const payload = { schema: 1, rechnung: i.id, rechnungsnummer: i.rechnungsnummer, von: user, am: nowIso(), antworten: answers };
-  const title = `Stellungnahme ${user} – ${i.kurz} ${i.rechnungsnummer} – ${answers.length} Antwort(en)`;
+  const prj = db.projekt?.id || "altbau";
+  const payload = { schema: 1, projekt: prj, rechnung: i.id, rechnungsnummer: i.rechnungsnummer, von: user, am: nowIso(), antworten: answers };
+  const title = `Stellungnahme ${user} – ${db.projekt?.kurz || ""} ${i.kurz} ${i.rechnungsnummer} – ${answers.length} Antwort(en)`.replace(/\s+/g, " ");
   const body = `**Stellungnahme abgeschlossen** von ${user} am ${new Date().toLocaleString("de-DE")}\n` +
     `${answers.length} Stellungnahme(n)${open ? `, ${open} Rückfrage(n) ohne Antwort` : ""}\n\n` +
     "```text\n" + answersText(i, user).replace(/```/g, "'''") + "\n```\n\n" +
@@ -1207,7 +1215,7 @@ $("#dlg-sent").addEventListener("close", () => { if ($("#dlg-sent").returnValue 
 
 $("#btn-link").onclick = async () => {
   const base = db.meta?.pages_url || (location.protocol.startsWith("http") ? location.origin + location.pathname : "");
-  if (!base) return toast("Noch keine Online-Adresse vorhanden – bitte zuerst python deploy_pages.py ausführen.", "err");
+  if (!base) return toast("Noch keine Online-Adresse vorhanden – bitte zuerst Aktualisieren.bat im Projektordner ausführen.", "err");
   const url = base.split(/[?#]/)[0] + "?role=elektriker";
   const ok = await copyText(url);
   toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort bitte separat (Telefon/SMS) mitteilen.`, "ok");
