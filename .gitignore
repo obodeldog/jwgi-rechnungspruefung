@@ -1,0 +1,5 @@
+*.pdf
+*.xlsx
+*.png
+*.json
+!package.json
