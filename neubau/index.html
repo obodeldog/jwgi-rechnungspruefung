@@ -200,7 +200,9 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
 .kosten .k-grid { display: grid; grid-template-columns: minmax(0, 1fr) 150px 80px; gap: 4px 14px; font-size: 13px; align-items: baseline; }
 .kosten .k-grid .v { text-align: right; font-variant-numeric: tabular-nums; }
 .kosten .k-grid .sum { font-weight: 700; border-top: 1px solid var(--line); padding-top: 4px; }
-.kosten details.grp { margin: 4px 0 0 0; } .kosten details.grp > summary { cursor: pointer; padding: 3px 0; }
+.kosten > details { margin-top: 10px; } .kosten > details > summary { cursor: pointer; padding: 3px 0; }
+.kosten details.grp { margin: 2px 0 0 22px; padding-left: 10px; border-left: 2px solid #dce6f0; }
+.kosten details.grp > summary { cursor: pointer; padding: 3px 0; }
 .kosten details.grp table { margin: 2px 0 6px 0; } .kosten select.urs { font-size: 11px; max-width: 190px; }
 .kosten tr[data-akte] { cursor: pointer; } .kosten tr[data-akte]:hover td { background: #f3f7fc; }
 .veranl { font-size: 11.5px; color: #375623; margin-top: 2px; }
@@ -481,8 +483,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015220203" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261015220203" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015222358" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261015222358" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
