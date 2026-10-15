@@ -1117,6 +1117,24 @@ function answersText(i, user) {
   return t;
 }
 
+async function uploadAnswers(i, upload, user) {
+  const answers = i.positionen.filter(hasAnswer).map(p => ({ oz: p.oz, stellungnahme_an: p.stellungnahme_an.trim() }));
+  const open = i.positionen.filter(p => needsAnswer(p) && !hasAnswer(p)).length;
+  const payload = { schema: 1, rechnung: i.id, rechnungsnummer: i.rechnungsnummer, von: user, am: nowIso(), antworten: answers };
+  const title = `Stellungnahme ${user} – ${i.kurz} ${i.rechnungsnummer} – ${answers.length} Antwort(en)`;
+  const body = `**Stellungnahme abgeschlossen** von ${user} am ${new Date().toLocaleString("de-DE")}\n` +
+    `${answers.length} Stellungnahme(n)${open ? `, ${open} Rückfrage(n) ohne Antwort` : ""}\n\n` +
+    "```text\n" + answersText(i, user).replace(/```/g, "'''") + "\n```\n\n" +
+    `<!-- JWGI-STELLUNGNAHME:${b64encode(JSON.stringify(payload))} -->\n`;
+  const r = await fetch(`https://api.github.com/repos/${upload.repo}/issues`, {
+    method: "POST",
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${upload.token}`, "X-GitHub-Api-Version": "2022-11-28" },
+    body: JSON.stringify({ title, body }),
+  });
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  return r.json();
+}
+
 let lastMailto = "";
 $("#btn-send").onclick = async () => {
   const i = inv();
@@ -1132,6 +1150,26 @@ $("#btn-send").onclick = async () => {
   i.stellungnahme_an_abgeschlossen = { am: nowIso(), von: settings.user, anzahl: n };
   logChange("", "Stellungnahme abgeschlossen", "", `${n} Positionen`);
   saveLocal();
+
+  const upload = db.meta?.upload;
+  if (upload?.token && upload?.repo) {
+    const btn = $("#btn-send"); btn.disabled = true; setState("Übertrage Stellungnahme …", "dirty");
+    try {
+      const issue = await uploadAnswers(i, upload, settings.user);
+      i.stellungnahme_an_abgeschlossen.uebermittelt = issue.number; saveLocal();
+      setState("Stellungnahme übermittelt " + new Date().toLocaleTimeString("de-DE"));
+      $("#sent-body").innerHTML = `<div class="legend">
+        <div class="chk ok"><span class="ic">✓</span><span>Ihre Stellungnahme (${n} Position(en)) wurde <b>erfolgreich an JAEGER Wohn- &amp; Gebäudeintelligenz übermittelt</b>.</span></div>
+        <div class="chk ok"><span class="ic">✓</span><span>Herr ${esc(db.projekt.pruefer?.titel || "Dr.-Ing. Jäger")} wird automatisch benachrichtigt.</span></div></div>
+        <div class="note" style="margin-top:10px">Sie müssen nichts weiter tun. Ergänzungen sind jederzeit möglich – einfach erneut auf „Stellungnahme abschließen“ klicken.</div>`;
+      $("#btn-mail-again").classList.add("hidden");
+      $("#dlg-sent").returnValue = ""; $("#dlg-sent").showModal();
+      return;
+    } catch (err) {
+      toast(`Automatische Übermittlung nicht möglich (${err.message}) – es wird stattdessen eine E-Mail vorbereitet.`, "err");
+    } finally { btn.disabled = false; }
+  }
+  $("#btn-mail-again").classList.remove("hidden");
 
   const exp = structuredClone(db);
   exp.meta = Object.assign({}, exp.meta, { export_rolle: "elektriker", exportiert_am: nowIso(), exportiert_von: settings.user });
