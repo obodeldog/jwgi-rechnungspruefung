@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Rechnungsprüfung LPH 8 – JAEGER Wohn- &amp; Gebäudeintelligenz</title>
+<title>Neubau – Rechnungsprüfung LPH 8 – JAEGER Wohn- &amp; Gebäudeintelligenz</title>
 <style>
   :root {
     --navy: #1f3864; --navy-2: #2f5597; --ink: #1d2433; --muted: #5f6b7a; --line: #dfe4ec;
@@ -442,7 +442,7 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015191724" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015202711" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
@@ -612,12 +612,12 @@ async function init() {
     db = merged; saveLocal();
   } else if (local && local.schema_version === SCHEMA_VERSION) {
     db = local;
-    if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
-        JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen) && !local.meta?.lokal_geaendert) {
+    const content = d => JSON.stringify(["rechnungen", "akte", "themen", "korrespondenz"].map(k => d[k] ?? null));
+    const newer = seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") && content(seed) !== content(local);
+    if (newer && !local.meta?.lokal_geaendert) {
       adoptSeed(seed, true);
       setTimeout(() => toast("Aktueller Stand geladen (inkl. neuer Stellungnahmen der Fa. Wahl).", "ok"), 0);
-    } else if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
-        JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
+    } else if (newer) {
       banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
         Sie haben im Browser aber noch <b>Änderungen, die nicht exportiert wurden</b>. Tipp: erst „JSON exportieren“ und
         <code>Aktualisieren.bat</code> doppelklicken – dann wird beides zusammengeführt.`, "", [
@@ -773,7 +773,7 @@ function renderAll() {
   const p = db.projekt || {};
   $("#prj-title").textContent = p.bezeichnung || "Rechnungsprüfung";
   $("#prj-sub").textContent = [p.adresse, p.auftragnehmer?.name && "AN: " + p.auftragnehmer.name, p.gewerk].filter(Boolean).join(" · ");
-  document.title = `Rechnungsprüfung LPH 8 – ${p.bezeichnung || ""}`;
+  document.title = `${p.kurz ? p.kurz + " – " : ""}Rechnungsprüfung LPH 8 – ${p.bezeichnung || ""}`;
   $("#inv-select").innerHTML = db.rechnungen.map(r =>
     `<option value="${esc(r.id)}" ${r.id === currentId ? "selected" : ""}>${esc(r.bezeichnung)} · ${esc(r.rechnungsnummer)} vom ${deDate(r.datum)}</option>`).join("");
   $("#btn-edit").classList.toggle("on", ui.edit);
