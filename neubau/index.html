@@ -184,6 +184,26 @@
   body.role-elektriker .pruefer-only { display: none !important; }
   body:not(.role-elektriker) .elektriker-only { display: none !important; }
   .chip.open.active { background: #2e7d32; border-color: #2e7d32; }
+  .akte-btn { border: 1px solid #c9d3e3; background: #f4f7fb; color: var(--navy); border-radius: 99px; padding: 0 7px; font-size: 11px;
+    font-weight: 700; cursor: pointer; margin-left: 4px; vertical-align: 1px; }
+  .akte-btn.offen { background: #fff4e5; border-color: #f9ab00; color: #8a4b00; }
+  .themen-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .themen-table th { text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  .themen-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .themen-table tr.clickable:hover { background: #fafcff; cursor: pointer; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; background: #eceff3; color: var(--muted); white-space: nowrap; }
+  .pill.offen { background: #fff4e5; color: #8a4b00; } .pill.ok { background: var(--g-bg); color: var(--g); }
+  .pill.JWGI { background: #e8eef9; color: var(--navy); } .pill.AN { background: var(--wahl); color: #2e5e17; }
+  .pill.Bauherr, .pill.Architekt { background: #f3e8fd; color: #6a1b9a; }
+  .timeline { display: grid; gap: 8px; max-height: 52vh; overflow: auto; padding-right: 4px; }
+  .tl { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; }
+  .tl.JWGI { border-color: var(--navy-2); } .tl.AN { border-color: #70ad47; } .tl.Bauherr, .tl.Architekt { border-color: #8e24aa; }
+  .tl .meta { font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tl .txt { margin-top: 2px; white-space: pre-wrap; }
+  .tl.intern { background: repeating-linear-gradient(135deg, #fff, #fff 6px, #fafafa 6px, #fafafa 12px); }
+  .stand { background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; }
+  #dlg-akte { width: min(860px, 96vw); }
+  .korr-list td a { color: var(--navy-2); }
 
   @media (max-width: 1100px) {
     .kpi-layout, .result { grid-template-columns: 1fr; }
@@ -280,6 +300,8 @@
 
   <section class="blocks" id="blocks"></section>
 
+  <section class="card no-print" id="themen" style="padding:14px 18px"></section>
+
   <section class="tbl">
     <div class="filters no-print" id="filters"></div>
     <div class="card table-wrap">
@@ -290,6 +312,7 @@
   <section class="result" id="result"></section>
   <div class="signs" id="signs"></div>
 
+  <details class="hist card no-print pruefer-only" id="korr"></details>
   <details class="hist card no-print pruefer-only" id="hist"></details>
   <p class="foot-note no-print pruefer-only">
     Änderungen werden automatisch im Browser gespeichert. Für Excel, PDF-Prüfvermerk und Online-Stand: „⤓ JSON exportieren“ klicken
@@ -379,6 +402,28 @@
   </form>
 </dialog>
 
+<dialog id="dlg-akte">
+  <form method="dialog" id="form-akte">
+    <h3 id="akte-title">Positionsakte</h3>
+    <div id="akte-body"></div>
+    <fieldset class="pruefer-only" id="akte-add">
+      <legend>Eintrag hinzufügen</legend>
+      <div class="grid2">
+        <label>Art<select name="art"><option>Info</option><option>Frage</option><option>Antwort</option><option>Einwand</option>
+          <option>Entscheidung</option><option>Hinweis</option><option>Angebot</option><option>Freigabe</option></select></label>
+        <label>Von<select name="rolle"><option value="JWGI">JWGI</option><option value="AN">Fa. Wahl</option><option value="Bauherr">Bauherr</option><option value="Architekt">Architekt</option></select></label>
+      </div>
+      <label>Text<textarea name="text" rows="3" style="border:1px solid var(--line);border-radius:6px;padding:6px 8px"></textarea></label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="intern"> nur intern (wird online nicht veröffentlicht)</label>
+      <div class="grid2">
+        <label>Stand / Zusammenfassung<input name="stand"></label>
+        <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-top:18px"><input type="checkbox" name="offen"> noch offen / strittig</label>
+      </div>
+    </fieldset>
+    <div class="actions"><button class="btn pruefer-only" value="save" id="btn-akte-save">Speichern</button><button class="btn primary" value="close" formnovalidate>Schließen</button></div>
+  </form>
+</dialog>
+
 <dialog id="dlg-pw">
   <form method="dialog" id="form-pw">
     <h3>Geschützter Prüfstand</h3>
@@ -397,7 +442,7 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015161810" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015165157" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
@@ -537,8 +582,15 @@ function mergeStellungnahmen(target, source, log) {
       const pt = t.positionen.find(x => x.oz === ps.oz);
       const neu = (ps.stellungnahme_an || "").trim();
       if (!pt || !neu || neu === (pt.stellungnahme_an || "").trim()) continue;
-      if (log) target.historie.push({ ts: nowIso(), user: source.meta?.exportiert_von || "Fa. Wahl", rechnung: t.id, oz: pt.oz,
-        feld: "Stellungnahme AN übernommen", alt: pt.stellungnahme_an || "", neu });
+      if (log) {
+        target.historie.push({ ts: nowIso(), user: source.meta?.exportiert_von || "Fa. Wahl", rechnung: t.id, oz: pt.oz,
+          feld: "Stellungnahme AN übernommen", alt: pt.stellungnahme_an || "", neu });
+        target.akte ||= {};
+        const a = target.akte[pt.oz] ||= { stand: "", offen: true, eintraege: [] };
+        a.eintraege.push({ datum: (source.meta?.exportiert_am || nowIso()).slice(0, 16), von: source.meta?.exportiert_von || "Fa. Wahl",
+          rolle: "AN", art: "Stellungnahme", text: neu, quelle: `Dashboard ${t.kurz}`, intern: false });
+        a.offen = true;
+      }
       pt.stellungnahme_an = neu; n++;
     }
   }
@@ -728,7 +780,7 @@ function renderAll() {
   if (!db.rechnungen.length) { ["#meta", "#kpis", "#release", "#blocks", "#filters", "#pos-table", "#result"].forEach(s => $(s).innerHTML = ""); renderHistory(); return; }
   const i = inv();
   $("#print-inv").textContent = `${i.bezeichnung} Nr. ${i.rechnungsnummer} vom ${deDate(i.datum)} – Prüfprotokoll`;
-  renderMeta(); renderKpis(); renderBlocks(); renderFilters(); renderTable(); renderResult(); renderHistory();
+  renderMeta(); renderKpis(); renderBlocks(); renderThemen(); renderFilters(); renderTable(); renderResult(); renderKorr(); renderHistory();
 }
 
 function renderMeta() {
@@ -795,6 +847,13 @@ function renderKpis() {
   if (i.skonto_frist) {
     const over = todayIso() > i.skonto_frist;
     checks.push([over ? "warn" : "ok", `Skontofrist lt. Rechnung: ${deDate(i.skonto_frist)}${over ? " – abgelaufen" : ""}`]);
+  }
+  if (i.eingang) {
+    const tage = i.typ === "Schlussrechnung" ? 30 : 21, d = new Date(i.eingang + "T12:00:00");
+    d.setDate(d.getDate() + tage);
+    const frist = d.toISOString().slice(0, 10), rest = Math.round((d - new Date(todayIso() + "T12:00:00")) / 864e5);
+    checks.push([rest < 0 ? "bad" : rest <= 7 ? "warn" : "ok",
+      `Zahlungsfrist § 16 VOB/B (${tage} Tage ab Eingang ${deDate(i.eingang)}): ${deDate(frist)}${rest < 0 ? ` – seit ${-rest} Tag(en) überschritten` : ` – noch ${rest} Tag(e)`}`]);
   }
   const diff = r2(p.zahlbetrag - g.zahlbetrag);
   $("#release").innerHTML = `
@@ -893,7 +952,7 @@ function rowHtml(i, p, n, lvm, prior) {
   const epWarn = lv.typ && lv.typ !== "Nachtrag" && r2(p.pruef_ep) !== r2(lv.ep) ? ` <span class="warn-ic" title="Prüf-EP weicht vom LV-EP ${fmt(lv.ep)} € ab">≠LV</span>` : "";
   const rfWarn = p.betrag_rechnung != null && r2(p.betrag_rechnung) !== betrag(p, false) ? ` <span class="warn-ic" title="lt. Rechnung ${eur(p.betrag_rechnung)} – Rechenfehler">!</span>` : "";
   return `<tr class="st-${st || "offen"}" data-i="${n}">
-    <td class="oz">${esc(p.oz)}</td>
+    <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
     <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${tag}${esc(p.kurztext)}`}</td>
     <td class="num">${p.lv_menge == null ? "–" : fmt(p.lv_menge)}</td>
     <td class="c">${esc(p.einheit)}</td>
@@ -960,6 +1019,108 @@ function renderResult() {
     </div></div>`;
   $("#signs").innerHTML = `<div><p>${esc(pr.ort || "")}, den ____________________</p>Aufgestellt / sachlich und rechnerisch geprüft:<br>${esc(pr.buero || "")}, ${esc(pr.name || "")}</div>
     <div><p>Leingarten, den ____________________</p>Freigabe Bauherr:<br>${esc(db.projekt.bauherr || "")}</div>`;
+}
+
+/* ---------- Positionsakten, Themen, Korrespondenz ---------- */
+const visibleEntries = list => (list || []).filter(x => !(IS_AN && x.intern)).sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
+const themenFor = oz => (db.themen || []).filter(t => (t.positionen || []).includes(oz));
+function akteBadge(oz) {
+  const a = (db.akte || {})[oz], th = themenFor(oz);
+  const n = visibleEntries(a?.eintraege).length + th.length;
+  if (!n) return "";
+  const offen = a?.offen || th.some(t => t.offen);
+  return `<button type="button" class="akte-btn no-print ${offen ? "offen" : ""}" data-akte="${esc(oz)}" title="Positionsakte: Verlauf und Stand">💬 ${n}</button>`;
+}
+const deDT = s => { if (!s) return "–"; const [d, t] = String(s).split("T"); return deDate(d) + (t && t !== "00:00" ? " " + t.slice(0, 5) : ""); };
+function quelleHtml(q) {
+  const k = (db.korrespondenz || []).find(x => x.id === q);
+  if (!k) return q ? esc(q) : "";
+  const link = !IS_AN && location.protocol === "file:" ? ` <a href="${encodeURI(k.datei.replace(/\\/g, "/"))}" title="Mail öffnen">öffnen</a>` : "";
+  return `${esc(k.id)} „${esc(k.betreff.slice(0, 70))}“${link}`;
+}
+function timelineHtml(entries) {
+  const list = visibleEntries(entries);
+  if (!list.length) return `<div class="small" style="color:var(--muted)">Noch keine Einträge.</div>`;
+  return `<div class="timeline">${list.map(x => `<div class="tl ${esc(x.rolle)} ${x.intern ? "intern" : ""}">
+    <div class="meta"><b>${deDT(x.datum)}</b><span class="pill ${esc(x.rolle)}">${esc(x.von || x.rolle)}</span><span class="pill">${esc(x.art)}</span>
+      ${x.intern ? `<span class="pill offen">intern</span>` : ""}<span>${quelleHtml(x.quelle)}</span></div>
+    <div class="txt">${esc(x.text)}</div></div>`).join("")}</div>`;
+}
+let akteCtx = null;
+function openAkte(kind, key) {
+  const f = $("#form-akte"); f.reset();
+  let title, stand, offen, entries, extra = "";
+  if (kind === "pos") {
+    const lv = lvMap()[key] || {}, a = (db.akte || {})[key] || {};
+    title = `Positionsakte ${key} – ${lv.kurztext || ""}`; stand = a.stand; offen = a.offen; entries = a.eintraege;
+    const th = themenFor(key);
+    if (th.length) extra = `<div class="small" style="margin:8px 0 0">Verknüpfte Themen: ${th.map(t => `<a href="#" data-thema="${esc(t.id)}">${esc(t.id)} ${esc(t.titel)}</a>`).join(" · ")}</div>`;
+  } else {
+    const t = (db.themen || []).find(x => x.id === key) || {};
+    title = `${t.id} – ${t.titel}`; stand = t.stand; offen = t.offen; entries = t.eintraege;
+    extra = `<div class="small" style="margin-top:6px">${esc(t.typ || "")} · Status: <b>${esc(t.status || "–")}</b>${t.angebot ? ` · Angebot ${esc(t.angebot)} vom ${deDate(t.angebot_datum)}` : ""}${t.betrag_netto != null ? ` · ${eur(t.betrag_netto)} netto` : ""}${t.freigegeben_netto != null ? ` · freigegeben ${eur(t.freigegeben_netto)}` : ""}${(t.positionen || []).length ? ` · Pos. ${t.positionen.map(esc).join(", ")}` : ""}</div>`;
+  }
+  akteCtx = { kind, key };
+  $("#akte-title").textContent = title;
+  const standHtml = IS_AN ? "" : `<div class="stand">${offen ? `<span class="pill offen">offen</span> ` : `<span class="pill ok">geklärt</span> `}${esc(stand || "Kein Stand erfasst.")}</div>`;
+  $("#akte-body").innerHTML = `${standHtml}${extra}
+    <h2 style="margin:14px 0 8px">Verlauf</h2>${timelineHtml(entries)}`;
+  f.stand.value = stand || ""; f.offen.checked = !!offen;
+  $("#dlg-akte").returnValue = "";
+  $("#dlg-akte").showModal();
+}
+$("#dlg-akte").addEventListener("click", e => {
+  const a = e.target.closest("[data-thema]"); if (!a) return;
+  e.preventDefault(); $("#dlg-akte").close(); openAkte("thema", a.dataset.thema);
+});
+$("#dlg-akte").addEventListener("close", () => {
+  if ($("#dlg-akte").returnValue !== "save" || IS_AN || !akteCtx) return;
+  const f = $("#form-akte"), { kind, key } = akteCtx;
+  let target;
+  if (kind === "pos") { db.akte ||= {}; target = db.akte[key] ||= { stand: "", offen: false, eintraege: [] }; }
+  else target = (db.themen || []).find(x => x.id === key);
+  if (!target) return;
+  target.eintraege ||= [];
+  if (f.text.value.trim()) {
+    const rolle = f.rolle.value;
+    target.eintraege.push({ datum: nowIso().slice(0, 16), von: rolle === "JWGI" ? (settings.user || "JWGI") : f.rolle.selectedOptions[0].text,
+      rolle, art: f.art.value, text: f.text.value.trim(), quelle: "Dashboard", intern: f.intern.checked });
+  }
+  if (target.stand !== f.stand.value || !!target.offen !== f.offen.checked) logChange(kind === "pos" ? key : "", "Stand " + key, target.stand, f.stand.value);
+  target.stand = f.stand.value; target.offen = f.offen.checked;
+  touch(); renderAll();
+  setTimeout(() => openAkte(kind, key), 0);
+});
+
+function renderThemen() {
+  const list = (db.themen || []).filter(t => !(IS_AN && t.intern));
+  if (!list.length) { $("#themen").innerHTML = ""; $("#themen").classList.add("hidden"); return; }
+  $("#themen").classList.remove("hidden");
+  const offen = list.filter(t => t.offen).length;
+  $("#themen").innerHTML = `<h2>Nachträge &amp; Klärungspunkte <span class="pill ${offen ? "offen" : "ok"}">${offen} offen</span></h2>
+    <table class="themen-table"><thead><tr><th>Nr.</th><th>Thema</th><th>Art</th><th>Status</th><th>Angebot</th><th style="text-align:right">Betrag netto</th>
+      <th style="text-align:right">freigegeben</th><th>Letzte Aktivität</th><th></th></tr></thead><tbody>
+    ${list.map(t => { const last = visibleEntries(t.eintraege).slice(-1)[0];
+      return `<tr class="clickable" data-thema-row="${esc(t.id)}"><td><b>${esc(t.id)}</b></td><td>${esc(t.titel)}${(t.positionen || []).length ? `<div class="small" style="color:var(--muted)">Pos. ${t.positionen.map(esc).join(", ")}</div>` : ""}</td>
+        <td>${esc(t.typ || "")}</td><td><span class="pill ${t.offen ? "offen" : "ok"}">${esc(t.status || (t.offen ? "offen" : "erledigt"))}</span></td>
+        <td>${t.angebot ? `${esc(t.angebot)}<div class="small" style="color:var(--muted)">${deDate(t.angebot_datum)}</div>` : "–"}</td>
+        <td class="num" style="text-align:right">${t.betrag_netto != null ? eur(t.betrag_netto) : "–"}</td>
+        <td class="num" style="text-align:right">${t.freigegeben_netto != null ? eur(t.freigegeben_netto) : "–"}</td>
+        <td>${last ? `${deDT(last.datum)} · ${esc(last.von || last.rolle)}` : "–"}</td><td>💬 ${visibleEntries(t.eintraege).length}</td></tr>`; }).join("")}
+    </tbody></table>`;
+}
+$("#themen").addEventListener("click", e => { const r = e.target.closest("[data-thema-row]"); if (r) openAkte("thema", r.dataset.themaRow); });
+$("#pos-table").addEventListener("click", e => { const b = e.target.closest("[data-akte]"); if (b) { e.stopPropagation(); openAkte("pos", b.dataset.akte); } });
+
+function renderKorr() {
+  const k = [...(db.korrespondenz || [])].sort((a, b) => b.datum.localeCompare(a.datum));
+  $("#korr").innerHTML = `<summary>Korrespondenz (${k.length} archivierte Mails)</summary>
+    <div style="max-height:360px;overflow:auto"><table class="korr-list"><thead><tr><th>Nr.</th><th>Datum</th><th>Von</th><th>Betreff / Zusammenfassung</th><th>Bezug</th><th>Dateien</th></tr></thead><tbody>
+    ${k.map(x => `<tr><td><b>${esc(x.id)}</b></td><td>${deDT(x.datum)}</td><td>${esc((x.von || "").replace(/<.*>/, ""))}</td>
+      <td><b>${esc(x.betreff)}</b><div>${esc(x.zusammenfassung || "")}</div></td>
+      <td>${[...(x.positionen || []).map(o => `Pos. ${esc(o)}`), ...(x.themen || []).map(esc)].join(", ")}</td>
+      <td>${[x.datei, ...(x.anhaenge || [])].map(d => location.protocol === "file:" ? `<a href="${encodeURI(d.replace(/\\/g, "/"))}">${esc(d.split(/[\\/]/).pop())}</a>` : esc(d.split(/[\\/]/).pop())).join("<br>")}</td></tr>`).join("")}
+    </tbody></table></div>`;
 }
 
 function renderHistory() {
