@@ -202,6 +202,12 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
 .kosten .k-grid .sum { font-weight: 700; border-top: 1px solid var(--line); padding-top: 4px; }
 .kosten details.grp { margin: 4px 0 0 0; } .kosten details.grp > summary { cursor: pointer; padding: 3px 0; }
 .kosten details.grp table { margin: 2px 0 6px 0; } .kosten select.urs { font-size: 11px; max-width: 190px; }
+.kosten tr[data-akte] { cursor: pointer; } .kosten tr[data-akte]:hover td { background: #f3f7fc; }
+.veranl { font-size: 11.5px; color: #375623; margin-top: 2px; }
+.rap { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+.rap th { text-align: left; background: #f2f2f2; padding: 4px 6px; } .rap td { border-bottom: 1px solid #eee; padding: 4px 6px; vertical-align: top; }
+.rap td.v { text-align: right; white-space: nowrap; } .rap tr.fremd td { color: #999; }
+.rap-sum { margin-top: 6px; font-size: 12px; padding: 6px 10px; border-radius: 6px; background: #f4f8fb; border: 1px solid #dce6f0; }
 .kosten .bar { position: relative; height: 14px; background: #eef1f5; border-radius: 7px; margin: 10px 0 4px; overflow: visible; }
 .kosten .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: var(--navy); }
 .kosten .bar .mark { position: absolute; top: -4px; bottom: -4px; width: 3px; border-radius: 2px; }
@@ -475,8 +481,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015212853" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261015212853" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015220159" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261015220159" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -597,6 +603,7 @@ function restrictFor(d) {
     t.eintraege = (t.eintraege || []).filter(x => !hidden(x));
   }
   if (IS_AN) for (const r of d.rechnungen || []) delete r.leistungsstand_pct;
+  for (const r of d.rapporte?.liste || []) { r.mitarbeiter = (r.mitarbeiter || []).map(m => ({ std: m.std })); delete r.datei; }
   return d;
 }
 
@@ -663,7 +670,7 @@ async function init() {
     db = merged; saveLocal();
   } else if (local && local.schema_version === SCHEMA_VERSION) {
     db = local;
-    const content = d => JSON.stringify(["rechnungen", "akte", "themen", "korrespondenz"].map(k => d[k] ?? null));
+    const content = d => JSON.stringify(["rechnungen", "akte", "themen", "korrespondenz", "rapporte"].map(k => d[k] ?? null));
     const newer = seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") && content(seed) !== content(local);
     if (newer && !local.meta?.lokal_geaendert) {
       adoptSeed(seed, true);
@@ -1006,10 +1013,13 @@ function renderKosten() {
       <div class="mark auftrag" style="left:${pos(k.auftrag)}" title="Auftragssumme"></div>
       ${prog ? `<div class="mark prog" style="left:${pos(ziel)}" title="voraussichtliche Schlussrechnung"></div>` : ""}</div>
     <div class="k-legend"><span>■ bisher abgerechnet</span><span>▮ schwarz = Auftragssumme</span>${prog ? `<span>▮ rot = voraussichtliche Schlussrechnung</span>` : ""}</div>
-    ${prog && k.offenOhne.length ? `<div class="k-risk">⚠ <b>Noch nicht eingerechnet</b> (Betrag offen): ${k.offenOhne.map(t => `${esc(t.id)} ${esc(t.titel)}`).join(" · ")}</div>` : ""}
-    <details open><summary><b>Was ist zusätzlich zum LV hinzugekommen – und warum?</b> (${k.zusatz.length} Positionen, ${eur(k.mehrPos)})</summary>
+    ${prog && k.offenOhne.length ? `<div class="k-risk">⚠ <b>Nicht in der Prognose enthalten – Betrag noch unbekannt</b> (es gibt weder ein Angebot noch eine Schätzung).
+      Die Schlussrechnung wird um diese Punkte voraussichtlich höher ausfallen:
+      ${k.offenOhne.map(t => `<div style="margin-top:3px">• <b>${esc(t.id)} ${esc(t.titel)}</b>${t.veranlassung ? `<div class="veranl">Veranlassung: ${esc(t.veranlassung)}</div>` : ""}</div>`).join("")}</div>` : ""}
+    <details open><summary><b>Was ist zusätzlich zum LV hinzugekommen – und warum?</b> (${k.zusatz.length} Positionen, ${eur(k.mehrPos)})
+      <span style="color:var(--muted);font-size:12px">– Gruppe aufklappen, Position anklicken für Verlauf und Nachweise</span></summary>
       ${gruppen.map(g => `<details class="grp"><summary>${esc(URSACHEN[g.u])} · ${g.list.length} Pos. · <b>${eur(g.sum)}</b></summary>
-        <table>${g.list.map(z => `<tr><td style="white-space:nowrap"><b>${esc(z.oz)}</b>${z.ohneLv ? ` <span class="tag nt">NT</span>` : ""}</td>
+        <table>${g.list.map(z => `<tr data-akte="${esc(z.oz)}" title="Verlauf und Nachweise anzeigen"><td style="white-space:nowrap"><b>${esc(z.oz)}</b>${z.ohneLv ? ` <span class="tag nt">NT</span>` : ""}</td>
           <td>${esc(z.kurztext)}<div class="small" style="color:var(--muted)">${esc(z.grund || "–")}</div></td>
           <td class="v">+${eur(z.mehr)}</td><td>${ursSel(z)}</td></tr>`).join("")}</table></details>`).join("")}
     </details>
@@ -1017,7 +1027,8 @@ function renderKosten() {
       <table>
         <tr><td>Auftragssumme</td><td class="v">${eur(k.auftrag)}</td></tr>
         <tr><td>+ bereits abgerechnete Mehrungen (siehe oben)</td><td class="v">${signed(k.mehrPos)}</td></tr>
-        ${k.themen.map(x => `<tr><td>+ ${esc(x.t.id)} ${esc(x.t.titel)} <span style="color:var(--muted)">(${esc(x.t.status || "")})</span></td><td class="v">${signed(x.wert)}</td></tr>`).join("")}
+        ${k.themen.map(x => `<tr><td>+ ${esc(x.t.id)} ${esc(x.t.titel)} <span style="color:var(--muted)">(${esc(x.t.status || "")})</span>${x.t.veranlassung ? `<div class="veranl">Veranlassung: ${esc(x.t.veranlassung)}</div>` : ""}</td><td class="v">${signed(x.wert)}</td></tr>`).join("")}
+        ${k.offenOhne.map(t => `<tr><td>+ ${esc(t.id)} ${esc(t.titel)} – <b>Betrag noch unbekannt, mit 0 € enthalten</b></td><td class="v">?</td></tr>`).join("")}
         <tr><td><b>= Prognose</b></td><td class="v"><b>${eur(k.prognose)}</b></td></tr>
         ${k.hoch != null ? `<tr><td>Hochrechnung über Leistungsstand (${fmt(k.ls, 0)} % fertig): abgerechnet ÷ Leistungsstand</td><td class="v">${eur(k.hoch)}</td></tr>` : ""}
       </table>
@@ -1026,6 +1037,10 @@ function renderKosten() {
       ${READONLY ? "" : "Leistungsstand unter „✎ Rechnungsdaten bearbeiten“, Beträge je Thema im Themen-Dialog (💬)."}</p>
     </details>` : ""}`;
 }
+$("#kosten").addEventListener("click", e => {
+  const r = e.target.closest("tr[data-akte]"); if (!r || e.target.closest("select")) return;
+  openAkte("pos", r.dataset.akte);
+});
 $("#kosten").addEventListener("change", e => {
   const el = e.target.closest("[data-urs]"); if (!el || READONLY) return;
   const p = inv().positionen.find(x => x.oz === el.dataset.urs); if (!p) return;
@@ -1214,19 +1229,48 @@ function timelineHtml(entries) {
       ${x.intern ? `<span class="pill offen">intern</span>` : ""}${x.nur_ag && !IS_AG ? `<span class="pill">nur Bauherr/Architekt</span>` : ""}<span>${quelleHtml(x.quelle)}</span></div>
     <div class="txt">${esc(x.text)}</div></div>`).join("")}</div>`;
 }
+const isRegie = oz => /^Stundenl/i.test(lvMap()[oz]?.kurztext || "");
+const BEREICH = { altbau: "Altbau", neubau: "Neubau", baustrom: "Baustrom (NA1)", unklar: "ohne Gebäudeangabe" };
+function rapportHtml() {
+  const rp = db.rapporte; if (!rp?.liste?.length) return "";
+  const eigen = db.projekt?.id || "";
+  const sumB = b => rp.liste.filter(r => r.bereich === b).reduce((a, r) => a + (Number(r.std) || 0), 0);
+  const zeigen = rp.liste.filter(r => r.bereich === eigen || r.bereich === "unklar").sort((a, b) => a.datum.localeCompare(b.datum));
+  const abger = inv().positionen.filter(p => isRegie(p.oz)).reduce((a, p) => a + (Number(p.menge) || 0), 0);
+  const leute = r => (r.mitarbeiter || []).map(m => `${m.name ? esc(m.name) + " " : ""}${fmt(m.std, 1)}`).join(" + ");
+  const beleg = r => !READONLY && r.datei && location.protocol === "file:"
+    ? `<a href="${encodeURI(r.datei.replace(/\\/g, "/"))}#page=${r.seite}" target="_blank" title="Original-Rapport öffnen">PDF S. ${r.seite}</a>` : `S. ${r.seite}`;
+  const andere = ["altbau", "neubau", "baustrom"].filter(b => b !== eigen && sumB(b)).map(b => `${BEREICH[b]} ${fmt(sumB(b), 1)} Std.`).join(", ");
+  return `<h2 style="margin:14px 0 4px">Rapporte (Stundenlohnnachweise)</h2>
+    <table class="rap"><thead><tr><th>Datum</th><th>Tätigkeit</th><th>${READONLY ? "Std. je Monteur" : "Monteure (Std.)"}</th><th style="text-align:right">Std.</th><th>Hinweis / Prüfung</th><th>Beleg</th></tr></thead><tbody>
+    ${zeigen.map(r => `<tr><td style="white-space:nowrap">${deDate(r.datum)}</td>
+      <td>${esc(r.taetigkeit)}${r.bereich === "unklar" ? ` <span class="pill offen">Gebäudeteil nicht angegeben</span>` : ""}</td>
+      <td>${leute(r)}</td><td class="v"><b>${fmt(r.std, 1)}</b></td>
+      <td>${esc([r.hinweis, r.pruefung].filter(Boolean).join(" · "))}${r.unterschrift_ag ? "" : `<div class="small" style="color:var(--r)">ohne Unterschrift Auftraggeber</div>`}</td>
+      <td>${beleg(r)}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="rap-sum">Rapporte ${BEREICH[eigen] || ""}: <b>${fmt(sumB(eigen), 1)} Std.</b>${sumB("unklar") ? ` · ohne Gebäudeangabe: ${fmt(sumB("unklar"), 1)} Std.` : ""}
+      · abgerechnet in ${esc(inv().kurz)}: <b>${fmt(abger, 2)} Std.</b>
+      ${andere ? `<div class="small" style="color:var(--muted)">Weitere Rapporte in denselben Paketen: ${andere}</div>` : ""}
+      ${rp.hinweis ? `<div style="margin-top:4px">${esc(rp.hinweis)}</div>` : ""}</div>`;
+}
+
 let akteCtx = null;
 function openAkte(kind, key) {
   const f = $("#form-akte"); f.reset();
   let title, stand, offen, entries, extra = "";
   if (kind === "pos") {
     const lv = lvMap()[key] || {}, a = (db.akte || {})[key] || {};
-    title = `Positionsakte ${key} – ${lv.kurztext || ""}`; stand = a.stand; offen = a.offen; entries = a.eintraege;
+    title = `Positionsakte ${key} – ${lv.kurztext || inv().positionen.find(x => x.oz === key)?.kurztext || ""}`; stand = a.stand; offen = a.offen; entries = a.eintraege;
     const th = themenFor(key);
     if (th.length) extra = `<div class="small" style="margin:8px 0 0">Verknüpfte Themen: ${th.map(t => `<a href="#" data-thema="${esc(t.id)}">${esc(t.id)} ${esc(t.titel)}</a>`).join(" · ")}</div>`;
+    if (isRegie(key)) extra += rapportHtml();
   } else {
     const t = (db.themen || []).find(x => x.id === key) || {};
     title = `${t.id} – ${t.titel}`; stand = t.stand; offen = t.offen; entries = t.eintraege;
-    extra = `<div class="small" style="margin-top:6px">${esc(t.typ || "")} · Status: <b>${esc(t.status || "–")}</b>${t.angebot ? ` · Angebot ${esc(t.angebot)} vom ${deDate(t.angebot_datum)}` : ""}${t.betrag_netto != null ? ` · ${eur(t.betrag_netto)} netto` : ""}${t.freigegeben_netto != null ? ` · freigegeben ${eur(t.freigegeben_netto)}` : ""}${(t.positionen || []).length ? ` · Pos. ${t.positionen.map(esc).join(", ")}` : ""}</div>`;
+    extra = `<div class="small" style="margin-top:6px">${esc(t.typ || "")} · Status: <b>${esc(t.status || "–")}</b>${t.angebot ? ` · Angebot ${esc(t.angebot)} vom ${deDate(t.angebot_datum)}` : ""}${t.betrag_netto != null ? ` · ${eur(t.betrag_netto)} netto` : ""}${t.freigegeben_netto != null ? ` · freigegeben ${eur(t.freigegeben_netto)}` : ""}${(t.positionen || []).length ? ` · Pos. ${t.positionen.map(esc).join(", ")}` : ""}</div>`
+      + (t.veranlassung ? `<div class="veranl" style="font-size:12.5px">Veranlassung: ${esc(t.veranlassung)}</div>` : "");
+    if ((t.positionen || []).some(isRegie)) extra += rapportHtml();
   }
   akteCtx = { kind, key };
   $("#akte-title").textContent = title;
@@ -1280,7 +1324,7 @@ function renderThemen() {
     <table class="themen-table"><thead><tr><th>Nr.</th><th>Thema</th><th>Art</th><th>Status</th><th>Angebot</th><th style="text-align:right">Betrag netto</th>
       <th style="text-align:right">freigegeben</th><th>Letzte Aktivität</th><th></th></tr></thead><tbody>
     ${list.map(t => { const last = visibleEntries(t.eintraege).slice(-1)[0];
-      return `<tr class="clickable" data-thema-row="${esc(t.id)}"><td><b>${esc(t.id)}</b></td><td>${esc(t.titel)}${(t.positionen || []).length ? `<div class="small" style="color:var(--muted)">Pos. ${t.positionen.map(esc).join(", ")}</div>` : ""}</td>
+      return `<tr class="clickable" data-thema-row="${esc(t.id)}"><td><b>${esc(t.id)}</b></td><td>${esc(t.titel)}${(t.positionen || []).length ? `<div class="small" style="color:var(--muted)">Pos. ${t.positionen.map(esc).join(", ")}</div>` : ""}${t.veranlassung ? `<div class="veranl">Veranlassung: ${esc(t.veranlassung)}</div>` : ""}</td>
         <td>${esc(t.typ || "")}</td><td><span class="pill ${t.offen ? "offen" : "ok"}">${esc(t.status || (t.offen ? "offen" : "erledigt"))}</span></td>
         <td>${t.angebot ? `${esc(t.angebot)}<div class="small" style="color:var(--muted)">${deDate(t.angebot_datum)}</div>` : "–"}</td>
         <td class="num" style="text-align:right">${t.betrag_netto != null ? eur(t.betrag_netto) : "–"}</td>
