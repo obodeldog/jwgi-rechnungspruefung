@@ -397,7 +397,7 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015152223" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015153317" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
@@ -560,9 +560,14 @@ async function init() {
   } else if (local && local.schema_version === SCHEMA_VERSION) {
     db = local;
     if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
+        JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen) && !local.meta?.lokal_geaendert) {
+      adoptSeed(seed, true);
+      setTimeout(() => toast("Aktueller Stand geladen (inkl. neuer Stellungnahmen der Fa. Wahl).", "ok"), 0);
+    } else if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
         JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
-      banner(`Neuere Datenbasis aus <code>build_audit.py</code> vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}).
-        Im Browser sind abweichende Bearbeitungsstände gespeichert.`, "", [
+      banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
+        Sie haben im Browser aber noch <b>Änderungen, die nicht exportiert wurden</b>. Tipp: erst „JSON exportieren“ und
+        <code>python update_all.py</code> ausführen – dann wird beides zusammengeführt.`, "", [
         ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
         ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
     }
@@ -603,6 +608,7 @@ function saveLocal() {
 
 function touch() {
   dirty = true;
+  if (!IS_AN) db.meta.lokal_geaendert = true;
   setState("Änderungen …", "dirty");
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveLocal, 400);
@@ -1061,8 +1067,10 @@ function download(name, text, type) {
 }
 $("#btn-export").onclick = () => {
   db.meta.exportiert_am = nowIso();
+  db.meta.lokal_geaendert = false;
   download("audit_data.json", JSON.stringify(db, null, 2) + "\n", "application/json");
-  toast("audit_data.json exportiert. Für die Excel-Ausgabe: Datei in den Projektordner legen und python build_audit.py --import audit_data.json ausführen.", "ok");
+  saveLocal();
+  toast("Exportiert. Jetzt python update_all.py ausführen – Ihre Änderungen werden automatisch aus dem Download-Ordner übernommen.", "ok");
 };
 $("#btn-import").onclick = () => $("#file-import").click();
 $("#file-import").onchange = async e => {
