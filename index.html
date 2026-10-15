@@ -314,7 +314,7 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
     </div>
   </section>
 
-  <section class="card kosten no-an" id="kosten"></section>
+  <section class="card kosten pruefer-only" id="kosten"></section>
 
   <section class="blocks" id="blocks"></section>
 
@@ -463,8 +463,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015205226" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261015205226" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015210332" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261015210332" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -581,10 +581,10 @@ function restrictFor(d) {
   for (const a of Object.values(d.akte || {})) { delete a.stand; a.eintraege = (a.eintraege || []).filter(x => !hidden(x)); }
   d.themen = (d.themen || []).filter(t => !hidden(t));
   for (const t of d.themen) {
-    delete t.stand; if (IS_AN) delete t.prognose_netto;
+    delete t.stand; delete t.prognose_netto; delete t.prognose_positionen;
     t.eintraege = (t.eintraege || []).filter(x => !hidden(x));
   }
-  if (IS_AN) for (const r of d.rechnungen || []) delete r.leistungsstand_pct;
+  for (const r of d.rechnungen || []) delete r.leistungsstand_pct;
   return d;
 }
 
@@ -676,7 +676,7 @@ async function init() {
   setState(IS_AG ? "Stand vom " + deDT(db.meta?.generiert_am || db.meta?.veroeffentlicht_am || "") : local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
   if (IS_AG && db.rechnungen.length) {
     banner(`<b>Ansicht für Bauherr und Architekt</b> (nur lesen). Sie sehen die geprüften Positionen mit Ampel und Prüfvermerk,
-      die Stellungnahmen der Fa. Wahl (grüne Spalte), Nachträge &amp; Klärungspunkte sowie die Kostenkontrolle.
+      die Stellungnahmen der Fa. Wahl (grüne Spalte) sowie Nachträge &amp; Klärungspunkte.
       Maßgeblich ist der unterschriebene Prüfvermerk (PDF).`, "ok");
   }
   if (IS_AN && db.rechnungen.length) {
@@ -889,7 +889,11 @@ function renderKpis() {
   if (keys.length) checks.push(bad.length ? ["bad", `Rechnungssummen weichen ab: ${bad.join(", ")}`] : ["ok", "Rechnung rechnerisch richtig (Summen, Abgebot, USt, Skonto nachgerechnet)"]);
   checks.push(rechenfehler.length ? ["bad", `Rechenfehler in Pos. ${rechenfehler.map(x => x.oz).join(", ")}`] : ["ok", "Positionsbeträge = Menge × EP"]);
   checks.push(epAbw.length ? ["warn", `EP weicht vom LV ab: Pos. ${epAbw.map(x => x.oz).join(", ")}`] : ["ok", "Einheitspreise der LV-Positionen = Vertrags-EP"]);
-  if (i.skonto_frist) {
+  if (k.skonto_tage && i.pruefdatum) {
+    const d = new Date(i.pruefdatum + "T12:00:00"); d.setDate(d.getDate() + Number(k.skonto_tage));
+    const bis = d.toISOString().slice(0, 10), over = todayIso() > bis;
+    checks.push([over ? "warn" : "ok", `Skontofrist lt. Bauvertrag: ${fmt(k.skonto_tage, 0)} Tage nach Rechnungsprüfung (${deDate(i.pruefdatum)}) → bis ${deDate(bis)}${over ? " – abgelaufen" : ""}${i.skonto_frist ? ` (Datum in der Rechnung ${deDate(i.skonto_frist)} ist nicht maßgeblich)` : ""}`]);
+  } else if (i.skonto_frist) {
     const over = todayIso() > i.skonto_frist;
     checks.push([over ? "warn" : "ok", `Skontofrist lt. Rechnung: ${deDate(i.skonto_frist)}${over ? " – abgelaufen" : ""}`]);
   }
