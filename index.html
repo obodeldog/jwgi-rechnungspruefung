@@ -397,7 +397,7 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015152047" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015152223" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
@@ -561,12 +561,10 @@ async function init() {
     db = local;
     if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
         JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
-      {
-        banner(`Neuere Datenbasis aus <code>build_audit.py</code> vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}).
-          Im Browser sind abweichende Bearbeitungsstände gespeichert.`, "", [
-          ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
-          ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
-      }
+      banner(`Neuere Datenbasis aus <code>build_audit.py</code> vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}).
+        Im Browser sind abweichende Bearbeitungsstände gespeichert.`, "", [
+        ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
+        ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
     }
   } else if (seed) {
     adoptSeed(seed, true);
