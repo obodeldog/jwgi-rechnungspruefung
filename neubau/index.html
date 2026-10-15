@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Rechnungsprüfung LPH 8 – JAEGER Wohn- &amp; Gebäudeintelligenz</title>
+<style>
+  :root {
+    --navy: #1f3864; --navy-2: #2f5597; --ink: #1d2433; --muted: #5f6b7a; --line: #dfe4ec;
+    --bg: #f3f5f9; --card: #ffffff; --input: #eef4fd;
+    --g: #137333; --g-bg: #e6f4ea; --y: #a05a00; --y-bg: #fef4d6; --r: #b3261e; --r-bg: #fce8e6;
+    --wahl: #e2efda; --wahl-head: #4e8a2e; --nt: #fce4d6;
+    --radius: 10px; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 13px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .wrap { max-width: 1900px; margin: 0 auto; padding: 0 20px 40px; }
+
+  header.top { background: var(--navy); color: #fff; }
+  header.top .wrap { display: flex; gap: 24px; align-items: center; padding-top: 14px; padding-bottom: 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 40px; height: 40px; border-radius: 8px; background: #fff; color: var(--navy); display: grid;
+    place-items: center; font-weight: 800; letter-spacing: -.5px; }
+  .brand small { display: block; opacity: .75; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .brand h1 { margin: 0; font-size: 18px; font-weight: 650; }
+  .brand .sub { opacity: .85; font-size: 12.5px; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top-right label { font-size: 12px; opacity: .8; }
+  .top-right select { background: #fff; color: var(--ink); border: 0; border-radius: 6px; padding: 6px 10px; min-width: 260px; }
+  .save-state { font-size: 12px; padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,.12); white-space: nowrap; }
+  .save-state.dirty { background: #f9ab00; color: #1d2433; }
+  .save-state.err { background: #d93025; }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 0 6px; align-items: center; }
+  .btn { border: 1px solid var(--line); background: var(--card); padding: 7px 12px; border-radius: 7px; cursor: pointer;
+    box-shadow: var(--shadow); display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .btn:hover { border-color: var(--navy-2); color: var(--navy-2); }
+  .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn.primary:hover { background: var(--navy-2); color: #fff; }
+  .btn.on { background: #fff4e5; border-color: #f9ab00; color: #7a4a00; }
+  .btn.danger { color: var(--r); }
+  .spacer { flex: 1; }
+
+  .banner { margin: 10px 0; padding: 10px 14px; border-radius: 8px; background: #fff4e5; border: 1px solid #f9d58b;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .banner.err { background: var(--r-bg); border-color: #f4b4ae; }
+  .banner.ok { background: var(--g-bg); border-color: #a8dab5; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  section { margin-top: 14px; }
+  h2 { font-size: 14px; margin: 0 0 10px; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+
+  .meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 22px; padding: 14px 18px; }
+  .meta div span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .meta div b { font-weight: 600; }
+  .meta input, .meta select { width: 100%; border: 1px solid var(--line); background: var(--input); border-radius: 5px; padding: 4px 7px; }
+
+  .kpi-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+  .kpi-matrix { display: grid; grid-template-columns: 150px repeat(4, minmax(0, 1fr)); overflow: hidden; }
+  .kpi-matrix > div { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .kpi-matrix .h { background: #f7f9fc; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .kpi-matrix .lbl { font-weight: 600; display: flex; align-items: center; }
+  .kpi-matrix .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+  .kpi-matrix .row-g .v { color: #44505f; }
+  .kpi-matrix .row-p { background: #eef4fd; }
+  .kpi-matrix .row-p .v { color: var(--navy); font-size: 23px; }
+  .kpi-matrix .row-d .v { font-size: 15px; color: var(--r); border-bottom: 0; }
+  .kpi-matrix .row-d { border-bottom: 0 !important; }
+  .release { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .release .big { font-size: 26px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .release .small { color: var(--muted); font-size: 12px; }
+  .chk { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; }
+  .chk .ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; flex: none; color: #fff; }
+  .chk.ok .ic { background: var(--g); } .chk.warn .ic { background: #e37400; } .chk.bad .ic { background: var(--r); }
+
+  .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .block-card { padding: 14px 16px; }
+  .block-card h3 { margin: 0 0 2px; font-size: 14px; }
+  .block-card .hint { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .block-card .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-variant-numeric: tabular-nums; }
+  .block-card .nums span { display: block; color: var(--muted); font-size: 11px; }
+  .block-card .nums b { font-size: 15px; }
+  .dots { display: flex; gap: 6px; margin-top: 8px; }
+  .dot { padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .dot.gruen { background: var(--g-bg); color: var(--g); } .dot.gelb { background: var(--y-bg); color: var(--y); }
+  .dot.rot { background: var(--r-bg); color: var(--r); } .dot.offen { background: #eceff3; color: var(--muted); }
+
+  .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 5px 12px; cursor: pointer; font-weight: 600; }
+  .chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .chip.gruen.active { background: var(--g); border-color: var(--g); } .chip.gelb.active { background: #e37400; border-color: #e37400; }
+  .chip.rot.active { background: var(--r); border-color: var(--r); }
+  .filters input[type=search], .filters select { border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; background: #fff; }
+  .filters input[type=search] { min-width: 260px; }
+
+  .table-wrap { overflow: auto; max-height: calc(100vh - 140px); border-radius: var(--radius); }
+  table.pos { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1750px; font-variant-numeric: tabular-nums; }
+  table.pos th, table.pos td { border-bottom: 1px solid var(--line); border-right: 1px solid #edf0f5; padding: 6px 7px; vertical-align: top; }
+  table.pos thead th { position: sticky; top: 0; z-index: 3; background: var(--navy); color: #fff; font-size: 11.5px; font-weight: 600;
+    text-align: center; vertical-align: middle; line-height: 1.25; }
+  table.pos thead th.wahl { background: var(--wahl-head); }
+  table.pos thead th.pr { background: #2f5597; }
+  table.pos td.oz, table.pos th.oz { position: sticky; left: 0; z-index: 2; background: inherit; }
+  table.pos thead th.oz { z-index: 4; background: var(--navy); }
+  table.pos tbody tr { background: #fff; }
+  table.pos tbody tr:hover { background: #fafcff; }
+  td.num { text-align: right; white-space: nowrap; }
+  td.c { text-align: center; }
+  td.oz { font-weight: 650; white-space: nowrap; border-left: 4px solid transparent; }
+  tr.st-gruen td.oz { border-left-color: var(--g); } tr.st-gelb td.oz { border-left-color: #f9ab00; }
+  tr.st-rot td.oz { border-left-color: var(--r); } tr.st-offen td.oz { border-left-color: #b8c0cc; }
+  td.txt { min-width: 260px; max-width: 340px; }
+  td.txt .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 0 6px; border-radius: 4px; margin-right: 4px; vertical-align: 1px; }
+  .tag.nt { background: var(--nt); color: #9a4a10; } .tag.bed { background: #e8eaf6; color: #3949ab; }
+  td.pr { background: var(--input); }
+  td.wahl { background: var(--wahl); min-width: 260px; }
+  td.kom { min-width: 300px; }
+  td input.n { width: 86px; text-align: right; border: 1px solid transparent; background: transparent; border-radius: 4px; padding: 3px 5px; font-weight: 600; color: var(--navy); }
+  td input.n:hover { border-color: #b9c8e3; }
+  td input.n:focus, td textarea:focus, td select:focus, td input.t:focus { outline: 2px solid var(--navy-2); outline-offset: -1px; background: #fff; }
+  td input.n.invalid { outline: 2px solid var(--r); }
+  td input.t { width: 100%; border: 1px solid #b9c8e3; background: #fff; border-radius: 4px; padding: 3px 5px; }
+  td textarea { width: 100%; min-height: 34px; resize: vertical; border: 1px solid transparent; background: transparent; border-radius: 4px;
+    padding: 3px 5px; line-height: 1.35; overflow: hidden; }
+  td textarea:hover { border-color: #b9c8e3; }
+  td.wahl textarea::placeholder { color: #6f8f5c; font-style: italic; }
+  select.amp { border: 0; border-radius: 99px; padding: 3px 8px; font-weight: 700; cursor: pointer; appearance: none; text-align: center; min-width: 64px; }
+  select.amp.gruen { background: var(--g-bg); color: var(--g); } select.amp.gelb { background: var(--y-bg); color: var(--y); }
+  select.amp.rot { background: var(--r-bg); color: var(--r); } select.amp.offen { background: #eceff3; color: var(--muted); }
+  select.kat { border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; background: #fff; font-weight: 700; }
+  .neg { color: var(--r); } .pos-v { color: var(--g); }
+  .over { color: #b45309; font-weight: 700; }
+  .warn-ic { color: var(--r); font-weight: 700; cursor: help; }
+  tr.blockrow td { background: #dde8f6; font-weight: 700; color: var(--navy); }
+  tr.blockrow td small { font-weight: 500; color: var(--muted); margin-left: 8px; }
+  tr.subtotal td { background: #f4f6f9; font-weight: 700; }
+  tfoot td { background: #dde8f6; font-weight: 800; position: sticky; bottom: 0; z-index: 2; border-top: 2px solid var(--navy); }
+  .print-only { display: none; }
+  .del { border: 0; background: none; color: var(--r); cursor: pointer; font-size: 15px; }
+
+  .result { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+  .result .card { padding: 14px 18px; }
+  .result table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .result td { padding: 4px 0; border-bottom: 1px dashed var(--line); }
+  .result td:last-child { text-align: right; font-weight: 650; }
+  .legend { display: grid; gap: 6px; font-size: 12.5px; }
+  .legend .dot { display: inline-block; min-width: 54px; text-align: center; margin-right: 6px; }
+  .vorbehalt { color: var(--muted); font-style: italic; font-size: 12px; margin-top: 10px; }
+  .signs { display: none; }
+
+  details.hist { margin-top: 14px; }
+  details.hist summary { cursor: pointer; font-weight: 600; color: var(--navy); padding: 10px 14px; }
+  details.hist table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  details.hist td, details.hist th { padding: 4px 10px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .foot-note { color: var(--muted); font-size: 11.5px; margin-top: 16px; }
+
+  dialog { border: 0; border-radius: 12px; padding: 0; width: min(640px, 94vw); box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  dialog::backdrop { background: rgba(15,23,42,.45); }
+  dialog form { padding: 20px 22px; display: grid; gap: 12px; }
+  dialog h3 { margin: 0; color: var(--navy); }
+  dialog .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  dialog label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  dialog input, dialog select { border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; color: var(--ink); }
+  dialog .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+  dialog .note { font-size: 12px; color: var(--muted); background: #f7f9fc; border-radius: 8px; padding: 8px 10px; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 10px; }
+  legend { font-weight: 600; color: var(--navy); padding: 0 4px; }
+  .hidden { display: none !important; }
+  .role-badge { font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: #e2efda; color: #2e5e17; }
+  .btn.send { background: #2e7d32; border-color: #2e7d32; color: #fff; font-weight: 700; padding: 9px 16px; font-size: 13.5px;
+    box-shadow: 0 0 0 3px rgba(46,125,50,.25); }
+  .btn.send:hover { background: #1b5e20; color: #fff; }
+  td input.n[readonly], td textarea[readonly] { cursor: not-allowed; }
+  td input.n[readonly]:hover, td textarea[readonly]:hover { border-color: transparent; }
+  select:disabled { opacity: 1; cursor: not-allowed; }
+  td input.hint { width: 100%; margin-top: 3px; border: 1px dashed #c9d3e3; background: transparent; border-radius: 4px; padding: 2px 5px;
+    font-size: 11.5px; color: #8a4b00; }
+  td input.hint::placeholder { color: #a7b0bd; font-style: italic; }
+  body.role-elektriker td.wahl { box-shadow: inset 0 0 0 2px #70ad47; }
+  body.role-elektriker td.wahl textarea { background: #fff; border-color: #9cc77e; min-height: 46px; }
+  body.role-elektriker .pruefer-only { display: none !important; }
+  body:not(.role-elektriker) .elektriker-only { display: none !important; }
+  .chip.open.active { background: #2e7d32; border-color: #2e7d32; }
+
+  @media (max-width: 1100px) {
+    .kpi-layout, .result { grid-template-columns: 1fr; }
+    .kpi-matrix { grid-template-columns: 110px repeat(4, minmax(0, 1fr)); }
+    .kpi-matrix .v { font-size: 16px; } .kpi-matrix .row-p .v { font-size: 18px; }
+  }
+
+  @page { size: A4 landscape; margin: 9mm 8mm 11mm; }
+  @media print {
+    html, body { background: #fff; font-size: 8.4pt; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .wrap { max-width: none; padding: 0; }
+    .no-print, .toolbar, .filters, .banner, details.hist, .del, .top-right select, .top-right label, .save-state { display: none !important; }
+    header.top { background: #fff; color: var(--ink); border-bottom: 2px solid var(--navy); }
+    header.top .wrap { padding: 0 0 6px; }
+    .logo { border: 2px solid var(--navy); }
+    .brand h1 { color: var(--navy); }
+    .print-inv { display: block !important; font-weight: 700; color: var(--navy); }
+    .card { box-shadow: none; }
+    section { margin-top: 8px; break-inside: avoid; }
+    section.tbl { break-inside: auto; }
+    .kpi-layout { grid-template-columns: 1fr 230px; }
+    .kpi-matrix { grid-template-columns: 105px repeat(4, 1fr); }
+    .kpi-matrix > div { padding: 5px 9px; }
+    .kpi-matrix .v { font-size: 11pt; } .kpi-matrix .row-p .v { font-size: 12pt; }
+    .release { padding: 8px 10px; gap: 4px; } .release .big { font-size: 15pt; }
+    .blocks { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .block-card { padding: 7px 10px; }
+    .table-wrap { overflow: visible; max-height: none; }
+    table.pos { min-width: 0; font-size: 7.2pt; }
+    table.pos th, table.pos td { padding: 2px 3px; }
+    table.pos thead { display: table-header-group; }
+    table.pos thead th, td.oz, tr.blockrow td, tfoot td { position: static; }
+    table.pos tr { break-inside: avoid; }
+    td.txt { min-width: 0; max-width: 150px; } td.kom, td.wahl { min-width: 0; width: 20%; }
+    td textarea, td input.t { display: none; }
+    td .print-only { display: block; white-space: pre-wrap; }
+    td input.n { width: auto; max-width: 62px; padding: 0; border: 0; }
+    select.amp, select.kat { appearance: none; -webkit-appearance: none; border: 0; padding: 1px 4px; min-width: 0; }
+    .result { grid-template-columns: 1.2fr 1fr; break-inside: avoid; }
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 26px; break-inside: avoid; }
+    .signs div { border-top: 1px solid #000; padding-top: 4px; font-size: 8pt; }
+    .signs p { margin: 0 0 30px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo">JW</div>
+      <div>
+        <small>JAEGER Wohn- &amp; Gebäudeintelligenz · Rechnungsprüfung LPH 8</small>
+        <h1 id="prj-title">Rechnungsprüfung</h1>
+        <div class="sub" id="prj-sub"></div>
+        <div class="print-inv print-only" id="print-inv"></div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="role-badge elektriker-only">Ansicht Fa. Wahl – nur grüne Spalte editierbar</span>
+      <label for="inv-select">Rechnung</label>
+      <select id="inv-select"></select>
+      <span class="save-state" id="save-state">–</span>
+      <button class="btn send elektriker-only no-print" id="btn-send">✅ Stellungnahme abschließen &amp; an Dr.-Ing. Jäger senden</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar no-print">
+    <button class="btn pruefer-only" id="btn-edit" title="Rechnungskopf, geforderte Mengen/EPs und Positionen bearbeiten">✎ Rechnungsdaten bearbeiten</button>
+    <button class="btn pruefer-only" id="btn-add-pos">＋ Position</button>
+    <button class="btn pruefer-only" id="btn-new-inv">＋ Neue Rechnung (2. TR / SR)</button>
+    <button class="btn pruefer-only" id="btn-link" title="Link für Fa. Wahl (Elektriker-Ansicht) kopieren">🔗 Link für Elektriker</button>
+    <span class="spacer"></span>
+    <button class="btn pruefer-only" id="btn-export" title="Komplette Datenbank als audit_data.json herunterladen">⤓ JSON exportieren</button>
+    <button class="btn pruefer-only" id="btn-import" title="audit_data.json oder Antwortdatei der Fa. Wahl einlesen">⤒ JSON / Antwort importieren</button>
+    <button class="btn" id="btn-csv">⤓ CSV (Excel)</button>
+    <button class="btn pruefer-only" id="btn-sync" title="Speicherort: Browser, REST-Backend oder GitHub">⚙ Speicherort / Sync</button>
+    <button class="btn danger pruefer-only" id="btn-reset" title="Lokale Änderungen verwerfen und audit_data.js neu laden">↺ Ausgangsdaten</button>
+    <button class="btn primary" id="btn-print">⎙ Drucken / PDF</button>
+    <input type="file" id="file-import" accept=".json,application/json" class="hidden">
+  </div>
+  <div id="banners"></div>
+
+  <section class="card meta" id="meta"></section>
+
+  <section>
+    <div class="kpi-layout">
+      <div class="card kpi-matrix" id="kpis"></div>
+      <div class="card release" id="release"></div>
+    </div>
+  </section>
+
+  <section class="blocks" id="blocks"></section>
+
+  <section class="tbl">
+    <div class="filters no-print" id="filters"></div>
+    <div class="card table-wrap">
+      <table class="pos" id="pos-table"></table>
+    </div>
+  </section>
+
+  <section class="result" id="result"></section>
+  <div class="signs" id="signs"></div>
+
+  <details class="hist card no-print pruefer-only" id="hist"></details>
+  <p class="foot-note no-print pruefer-only">
+    Änderungen werden automatisch im Browser gespeichert. Für Excel, PDF-Prüfvermerk und Online-Stand: „⤓ JSON exportieren“ klicken
+    und im Projektordner <code>Aktualisieren.bat</code> doppelklicken.
+  </p>
+</main>
+
+<dialog id="dlg-inv">
+  <form method="dialog" id="form-inv">
+    <h3>Neue Rechnung anlegen</h3>
+    <div class="grid2">
+      <label>Art<select name="typ"><option value="Teilrechnung">Teilrechnung (Abschlag)</option><option value="Schlussrechnung">Schlussrechnung</option></select></label>
+      <label>Laufende Nr.<input name="nr" type="number" min="1" required></label>
+      <label>Rechnungsnummer AN<input name="rechnungsnummer" required placeholder="z. B. R40xxxx"></label>
+      <label>Rechnungsdatum<input name="datum" type="date" required></label>
+      <label>Abrechnungsart<select name="abrechnungsart">
+        <option value="inkrementell">inkrementell (nur neue Mengen)</option>
+        <option value="kumuliert">kumuliert (Gesamtmengen bis dato)</option></select></label>
+      <label>Skontofrist lt. Rechnung<input name="skonto_frist" type="date"></label>
+      <label>Bisherige Abschlagszahlungen (brutto)<input name="bisherige_zahlungen_brutto" inputmode="decimal" value="0,00"></label>
+      <label>Positionen übernehmen<select name="copy">
+        <option value="none">keine (leer beginnen)</option>
+        <option value="oz">OZ der aktuellen Rechnung (Mengen 0)</option>
+        <option value="full">aktuelle Rechnung inkl. Mengen (kumulierte Abrechnung)</option></select></label>
+    </div>
+    <div class="note">Die neue Rechnung wird in der Datenbank angelegt. Bisher geprüfte Mengen aus Vorrechnungen werden für „% LV (kum.)“ automatisch berücksichtigt.</div>
+    <div class="actions"><button class="btn" value="cancel" formnovalidate>Abbrechen</button><button class="btn primary" value="ok">Anlegen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-pos">
+  <form method="dialog" id="form-pos">
+    <h3>Position hinzufügen</h3>
+    <label>LV- / Nachtragsposition suchen (OZ oder Text)
+      <input name="lvsearch" list="lv-list" placeholder="z. B. 53.33 oder Schukosteckdose"><datalist id="lv-list"></datalist></label>
+    <fieldset>
+      <legend>Position</legend>
+      <div class="grid2">
+        <label>OZ<input name="oz" required></label>
+        <label>Block<select name="block" id="pos-block"></select></label>
+        <label style="grid-column: 1 / -1">Kurztext<input name="kurztext" required></label>
+        <label>Einheit<input name="einheit" required></label>
+        <label>LV-Menge<input name="lv_menge" inputmode="decimal" placeholder="leer = ohne LV-Grundlage"></label>
+        <label>Menge lt. Rechnung<input name="menge" inputmode="decimal" required></label>
+        <label>EP lt. Rechnung<input name="ep" inputmode="decimal" required></label>
+      </div>
+    </fieldset>
+    <div class="note">Neue OZ, die nicht im LV stehen, werden als Nachtrag in den Katalog übernommen und beim Aktualisieren im LV-Reiter der Excel eingefügt.</div>
+    <div class="actions"><button class="btn" value="cancel" formnovalidate>Abbrechen</button><button class="btn primary" value="ok">Hinzufügen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-sync">
+  <form method="dialog" id="form-sync">
+    <h3>Speicherort &amp; Synchronisation</h3>
+    <label>Bearbeiter (für das Änderungsprotokoll)<input name="user" placeholder="z. B. M. Jäger / Fa. Wahl"></label>
+    <fieldset>
+      <legend>Speicherort</legend>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="radio" name="mode" value="local"> Nur dieser Browser (localStorage) + JSON-Export</label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="radio" name="mode" value="rest"> REST-Backend (GET/PUT eines JSON-Dokuments)</label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="radio" name="mode" value="github"> GitHub-Repository (Contents-API)</label>
+    </fieldset>
+    <fieldset data-mode="rest">
+      <legend>REST-Backend</legend>
+      <label>URL (GET liefert, PUT speichert audit_data.json)<input name="restUrl" placeholder="https://server.example/api/rechnungspruefung/mitsch-altbau"></label>
+      <label>Bearer-Token (optional)<input name="restToken" type="password" autocomplete="off"></label>
+    </fieldset>
+    <fieldset data-mode="github">
+      <legend>GitHub</legend>
+      <div class="grid2">
+        <label>Owner / Organisation<input name="ghOwner" placeholder="jwgi"></label>
+        <label>Repository<input name="ghRepo" placeholder="jwgi-rechnungspruefung"></label>
+        <label>Branch<input name="ghBranch" placeholder="main"></label>
+        <label>Pfad der Datei<input name="ghPath" placeholder="audit_data.json"></label>
+      </div>
+      <label>Fine-grained Personal Access Token (Contents: Read &amp; Write)<input name="ghToken" type="password" autocomplete="off"></label>
+    </fieldset>
+    <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="autoSync"> Änderungen automatisch zum Remote-Speicher übertragen</label>
+    <div class="note">Zugangsdaten werden ausschließlich lokal in diesem Browser gespeichert. Bei GitHub wird jede Speicherung als Commit abgelegt (vollständige Historie).</div>
+    <div class="actions">
+      <button class="btn" value="pull" id="btn-pull">⤓ Vom Remote laden</button>
+      <button class="btn" value="push" id="btn-push">⤒ Auf Remote speichern</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel" formnovalidate>Schließen</button>
+      <button class="btn primary" value="ok">Übernehmen</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-pw">
+  <form method="dialog" id="form-pw">
+    <h3>Geschützter Prüfstand</h3>
+    <div class="note">Die Prüfdaten sind verschlüsselt. Bitte das Passwort eingeben, das Sie von JAEGER Wohn- &amp; Gebäudeintelligenz erhalten haben.</div>
+    <label>Passwort<input name="pw" type="password" autocomplete="current-password" required autofocus></label>
+    <div class="note hidden" id="pw-err" style="color:var(--r);background:var(--r-bg)">Passwort falsch – bitte erneut versuchen.</div>
+    <div class="actions"><button class="btn primary" value="ok">Öffnen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-sent">
+  <form method="dialog">
+    <h3>Stellungnahme abgeschlossen</h3>
+    <div id="sent-body"></div>
+    <div class="actions"><button class="btn" value="mail" id="btn-mail-again">✉ E-Mail erneut öffnen</button><button class="btn primary" value="ok">Fertig</button></div>
+  </form>
+</dialog>
+
+<script src="audit_data.enc.js?v=20261015161810" onerror="void 0"></script>
+<script>
+"use strict";
+const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
+const ROLE = PUBLIC_SITE || new URLSearchParams(location.search).get("role") === "elektriker" ? "elektriker" : "pruefer";
+const IS_AN = ROLE === "elektriker";
+document.body.classList.toggle("role-elektriker", IS_AN);
+const PROJECT_KEY = window.AUDIT_SEED?.projekt?.storage_key || window.AUDIT_SEED_ENC?.storage_key || "mitsch-altbau";
+const STORE_KEY = `jwgi.rechnungspruefung.${PROJECT_KEY}.v1` + (IS_AN ? ".elektriker" : "");
+const SETTINGS_KEY = STORE_KEY + ".settings";
+const SCHEMA_VERSION = 1;
+const AMPEL = { gruen: "Grün", gelb: "Gelb", rot: "Rot", "": "offen" };
+const NUM_FIELDS = new Set(["menge", "ep", "pruef_menge", "pruef_ep"]);
+
+let db = null, currentId = null, dirty = false, remoteTimer = null, saveTimer = null;
+const ui = { status: "alle", block: "alle", search: "", edit: false };
+let settings = Object.assign({ mode: "local", user: "", ghBranch: "main", ghPath: "audit_data.json", autoSync: false },
+  safeParse(localStorage.getItem(SETTINGS_KEY)) || {});
+
+/* ---------- Hilfsfunktionen ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+function safeParse(s) { try { return s ? JSON.parse(s) : null; } catch { return null; } }
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const r2 = x => { x = Number(x) || 0; const s = x < 0 ? -1 : 1; return s * Math.round(Math.abs(x) * 100 + 1e-6) / 100; };
+const fmt = (x, d = 2) => (Number(x) || 0).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+const eur = x => fmt(x) + " €";
+const signed = x => (x > 0 ? "+" : "") + eur(x);
+const deDate = iso => iso ? iso.split("-").reverse().join(".") : "–";
+const todayIso = () => new Date().toISOString().slice(0, 10);
+const nowIso = () => new Date().toISOString().slice(0, 19);
+function parseNum(v) {
+  if (typeof v === "number") return v;
+  let s = String(v ?? "").trim().replace(/[€\s]/g, "");
+  if (!s) return 0;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+const ozKey = oz => String(oz).split(".").map(n => parseInt(n, 10) || 0);
+function cmpOz(a, b) {
+  const x = ozKey(a), y = ozKey(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] ?? -1) - (y[i] ?? -1); if (d) return d; }
+  return 0;
+}
+
+/* ---------- Datenmodell & Rechnen ---------- */
+const inv = () => db.rechnungen.find(r => r.id === currentId) || db.rechnungen[0];
+const lvMap = () => Object.fromEntries((db.lv?.positionen || []).map(p => [p.oz, p]));
+const kond = i => Object.assign({}, db.konditionen, i.konditionen || {});
+const betrag = (p, pruef) => pruef ? r2(p.pruef_menge * p.pruef_ep) : r2(p.menge * p.ep);
+
+function sums(i, pruef) {
+  const k = kond(i);
+  const netto = r2(i.positionen.reduce((a, p) => a + betrag(p, pruef), 0));
+  const abgebot = r2(netto * k.abgebot_pct / 100);
+  const nna = r2(netto - abgebot);
+  const ust = r2(nna * k.mwst_pct / 100);
+  const brutto = r2(nna + ust);
+  const zahlbetrag = r2(brutto - (Number(i.bisherige_zahlungen_brutto) || 0));
+  const skonto = r2(zahlbetrag * k.skonto_pct / 100);
+  return { netto, abgebot, netto_nach_abgebot: nna, ust, brutto, zahlbetrag, skonto, zahlbetrag_skonto: r2(zahlbetrag - skonto) };
+}
+
+function priorQty(i) {
+  const cum = {};
+  for (const r of db.rechnungen) {
+    if (r.id === i.id) break;
+    for (const p of r.positionen) {
+      const q = Number(p.pruef_menge) || 0;
+      cum[p.oz] = r.abrechnungsart === "kumuliert" ? q : (cum[p.oz] || 0) + q;
+    }
+  }
+  return cum;
+}
+
+function pctLv(i, p, prior) {
+  const lvm = Number(p.lv_menge);
+  if (!lvm) return null;
+  const q = i.abrechnungsart === "kumuliert" ? p.pruef_menge : (prior[p.oz] || 0) + p.pruef_menge;
+  return q / lvm;
+}
+
+function blocksOf(i) {
+  const known = db.bloecke.map(b => b.id);
+  const list = db.bloecke.filter(b => i.positionen.some(p => p.block === b.id));
+  if (i.positionen.some(p => !known.includes(p.block))) list.push({ id: "_", titel: "Sonstige Positionen", hinweis: "" });
+  return list;
+}
+const inBlock = (p, b) => b.id === "_" ? !db.bloecke.some(x => x.id === p.block) : p.block === b.id;
+
+/* ---------- Laden / Speichern ---------- */
+function emptyDb() {
+  return { schema_version: SCHEMA_VERSION, projekt: { bezeichnung: "Rechnungsprüfung", auftragnehmer: {}, pruefer: {} },
+    konditionen: { abgebot_pct: 0, mwst_pct: 19, skonto_pct: 0 }, bloecke: [], kategorien: {}, ampel: {},
+    lv: { positionen: [] }, rechnungen: [], historie: [], meta: { revision: 1 } };
+}
+
+async function decryptSeed(enc, pw) {
+  const bytes = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: bytes(enc.salt), iterations: enc.iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: bytes(enc.iv) }, key, bytes(enc.data));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+async function loadSeed() {
+  if (window.AUDIT_SEED) return structuredClone(window.AUDIT_SEED);
+  const enc = window.AUDIT_SEED_ENC;
+  if (!enc) return null;
+  const pwKey = STORE_KEY + ".pw";
+  const cached = sessionStorage.getItem(pwKey) || new URLSearchParams(location.hash.slice(1)).get("pw");
+  if (cached) { try { const d = await decryptSeed(enc, cached); sessionStorage.setItem(pwKey, cached); return d; } catch { /* Passwort abfragen */ } }
+  return new Promise(resolve => {
+    const dlg = $("#dlg-pw"), f = $("#form-pw");
+    dlg.addEventListener("cancel", e => e.preventDefault());
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try {
+        const d = await decryptSeed(enc, f.pw.value);
+        sessionStorage.setItem(pwKey, f.pw.value); dlg.close(); resolve(d);
+      } catch { $("#pw-err").classList.remove("hidden"); f.pw.select(); }
+    };
+    dlg.showModal();
+  });
+}
+
+const needsAnswer = p => p.status === "gelb" || p.status === "rot";
+const hasAnswer = p => !!(p.stellungnahme_an || "").trim();
+
+/** Übernimmt ausschließlich die Spalte „Stellungnahme Elektriker“ aus source in target. */
+function mergeStellungnahmen(target, source, log) {
+  let n = 0;
+  for (const ri of source.rechnungen || []) {
+    const t = target.rechnungen.find(r => r.id === ri.id); if (!t) continue;
+    for (const ps of ri.positionen || []) {
+      const pt = t.positionen.find(x => x.oz === ps.oz);
+      const neu = (ps.stellungnahme_an || "").trim();
+      if (!pt || !neu || neu === (pt.stellungnahme_an || "").trim()) continue;
+      if (log) target.historie.push({ ts: nowIso(), user: source.meta?.exportiert_von || "Fa. Wahl", rechnung: t.id, oz: pt.oz,
+        feld: "Stellungnahme AN übernommen", alt: pt.stellungnahme_an || "", neu });
+      pt.stellungnahme_an = neu; n++;
+    }
+  }
+  return n;
+}
+
+async function init() {
+  const seed = await loadSeed();
+  const local = safeParse(localStorage.getItem(STORE_KEY));
+  if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
+    const merged = structuredClone(seed);
+    merged.historie = local.historie || [];
+    for (const r of merged.rechnungen) {
+      const lr = (local.rechnungen || []).find(x => x.id === r.id);
+      if (lr?.stellungnahme_an_abgeschlossen) r.stellungnahme_an_abgeschlossen = lr.stellungnahme_an_abgeschlossen;
+    }
+    mergeStellungnahmen(merged, local, false);
+    merged.meta.seed_generiert_am = seed.meta.generiert_am;
+    db = merged; saveLocal();
+  } else if (local && local.schema_version === SCHEMA_VERSION) {
+    db = local;
+    if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
+        JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen) && !local.meta?.lokal_geaendert) {
+      adoptSeed(seed, true);
+      setTimeout(() => toast("Aktueller Stand geladen (inkl. neuer Stellungnahmen der Fa. Wahl).", "ok"), 0);
+    } else if (seed && seed.meta?.generiert_am > (local.meta?.seed_generiert_am || "") &&
+        JSON.stringify(seed.rechnungen) !== JSON.stringify(local.rechnungen)) {
+      banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
+        Sie haben im Browser aber noch <b>Änderungen, die nicht exportiert wurden</b>. Tipp: erst „JSON exportieren“ und
+        <code>Aktualisieren.bat</code> doppelklicken – dann wird beides zusammengeführt.`, "", [
+        ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
+        ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
+    }
+  } else if (seed) {
+    adoptSeed(seed, true);
+  } else {
+    db = emptyDb();
+    banner("<b>audit_data.js</b> wurde nicht gefunden. Bitte im Projektordner <code>Aktualisieren.bat</code> doppelklicken oder eine JSON-Datei importieren.", "err");
+  }
+  db.historie ||= [];
+  currentId = (db.rechnungen.find(r => r.id === settings.lastInvoice) || db.rechnungen[db.rechnungen.length - 1] || {}).id;
+  if (IS_AN) ui.edit = false;
+  renderAll();
+  setState(local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
+  if (IS_AN && db.rechnungen.length) {
+    banner(`<b>Guten Tag, Fa. Wahl.</b> Bitte nehmen Sie in der <b>grünen Spalte „Stellungnahme Elektriker“</b> zu den gelb und rot markierten
+      Positionen Stellung (z. B. Raum/Montageort, Nachweise, Begründung). Die Prüfwerte sind schreibgeschützt. Ihre Eingaben werden automatisch
+      in diesem Browser gespeichert. Zum Schluss oben rechts auf <b>„✅ Stellungnahme abschließen“</b> klicken.`, "ok");
+  }
+}
+
+function adoptSeed(seed, silent) {
+  db = structuredClone(seed);
+  db.meta.seed_generiert_am = seed.meta.generiert_am;
+  saveLocal();
+  if (!silent) { currentId = db.rechnungen[db.rechnungen.length - 1]?.id; renderAll(); toast("Datenbasis aus audit_data.js übernommen.", "ok"); }
+}
+
+function saveLocal() {
+  db.meta ||= {};
+  db.meta.geaendert_am = nowIso();
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(db));
+    dirty = false;
+    setState("Im Browser gespeichert " + new Date().toLocaleTimeString("de-DE"));
+  } catch (e) { setState("Speichern fehlgeschlagen", "err"); toast("Speichern im Browser fehlgeschlagen: " + e.message, "err"); }
+}
+
+function touch() {
+  dirty = true;
+  if (!IS_AN) db.meta.lokal_geaendert = true;
+  setState("Änderungen …", "dirty");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveLocal, 400);
+  if (settings.autoSync && settings.mode !== "local") {
+    clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(() => Remote.push(true).catch(e => toast(e.message, "err")), 4000);
+  }
+}
+
+function setState(txt, cls = "") { const el = $("#save-state"); el.textContent = txt; el.className = "save-state " + cls; }
+
+function logChange(oz, feld, alt, neu) {
+  if (String(alt ?? "") === String(neu ?? "")) return;
+  db.historie.push({ ts: nowIso(), user: settings.user || "Browser", rechnung: currentId, oz, feld, alt, neu });
+  if (db.historie.length > 5000) db.historie.splice(0, db.historie.length - 5000);
+  renderHistory();
+}
+
+/* ---------- Remote (REST / GitHub) ---------- */
+function b64encode(str) {
+  const bytes = new TextEncoder().encode(str); let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64decode(b64) {
+  const bin = atob(b64.replace(/\s/g, "")); const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+const Remote = {
+  ghUrl() {
+    const s = settings;
+    if (!s.ghOwner || !s.ghRepo || !s.ghToken) throw new Error("GitHub: Owner, Repository und Token angeben.");
+    return `https://api.github.com/repos/${encodeURIComponent(s.ghOwner)}/${encodeURIComponent(s.ghRepo)}/contents/` +
+      (s.ghPath || "audit_data.json").split("/").map(encodeURIComponent).join("/");
+  },
+  ghHeaders() { return { Accept: "application/vnd.github+json", Authorization: `Bearer ${settings.ghToken}`, "X-GitHub-Api-Version": "2022-11-28" }; },
+  async ghGet() {
+    const r = await fetch(`${this.ghUrl()}?ref=${encodeURIComponent(settings.ghBranch || "main")}`, { headers: this.ghHeaders(), cache: "no-store" });
+    if (r.status === 404) return { sha: null, data: null };
+    if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(() => ({}))).message || r.statusText}`);
+    const j = await r.json();
+    return { sha: j.sha, data: JSON.parse(b64decode(j.content)) };
+  },
+  restHeaders() { const h = { "Content-Type": "application/json" }; if (settings.restToken) h.Authorization = `Bearer ${settings.restToken}`; return h; },
+  async pull() {
+    let data;
+    if (settings.mode === "github") data = (await this.ghGet()).data;
+    else if (settings.mode === "rest") {
+      if (!settings.restUrl) throw new Error("REST: URL angeben.");
+      const r = await fetch(settings.restUrl, { headers: this.restHeaders(), cache: "no-store" });
+      if (!r.ok) throw new Error(`REST ${r.status}: ${r.statusText}`);
+      data = await r.json();
+    } else throw new Error("Kein Remote-Speicher konfiguriert.");
+    if (!data) throw new Error("Remote-Datei existiert noch nicht.");
+    validateDb(data);
+    db = data; saveLocal(); renderAll();
+    toast(`Vom Remote geladen (Revision ${data.meta?.revision ?? "?"}).`, "ok");
+  },
+  async push(auto) {
+    if (settings.mode === "local") throw new Error("Kein Remote-Speicher konfiguriert.");
+    const payload = structuredClone(db);
+    payload.meta.revision = (Number(db.meta.revision) || 0) + 1;
+    payload.meta.geaendert_am = nowIso();
+    payload.meta.geaendert_von = settings.user || "Browser";
+    const body = JSON.stringify(payload, null, 2);
+    if (settings.mode === "github") {
+      const { sha, data } = await this.ghGet();
+      if (data && (Number(data.meta?.revision) || 0) > (Number(db.meta.revision) || 0) &&
+          !confirm(`Auf GitHub liegt eine neuere Revision (${data.meta.revision}) als lokal (${db.meta.revision}). Trotzdem überschreiben?`)) return;
+      const r = await fetch(this.ghUrl(), { method: "PUT", headers: this.ghHeaders(), body: JSON.stringify({
+        message: `Rechnungsprüfung ${currentId}: Revision ${payload.meta.revision} (${payload.meta.geaendert_von})`,
+        content: b64encode(body), branch: settings.ghBranch || "main", ...(sha ? { sha } : {}) }) });
+      if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.json().catch(() => ({}))).message || r.statusText}`);
+    } else {
+      if (!settings.restUrl) throw new Error("REST: URL angeben.");
+      const r = await fetch(settings.restUrl, { method: "PUT", headers: this.restHeaders(), body });
+      if (!r.ok) throw new Error(`REST ${r.status}: ${r.statusText}`);
+    }
+    db.meta.revision = payload.meta.revision; db.meta.geaendert_von = payload.meta.geaendert_von;
+    saveLocal();
+    setState(`Remote gespeichert (Rev. ${db.meta.revision}) ${new Date().toLocaleTimeString("de-DE")}`);
+    if (!auto) toast(`Auf ${settings.mode === "github" ? "GitHub" : "REST-Backend"} gespeichert (Revision ${db.meta.revision}).`, "ok");
+  },
+};
+
+function validateDb(d) {
+  if (!d || d.schema_version !== SCHEMA_VERSION || !Array.isArray(d.rechnungen)) throw new Error("Ungültige Datei (schema_version " + SCHEMA_VERSION + " erwartet).");
+}
+
+/* ---------- Banner / Toast ---------- */
+function banner(html, cls = "", actions = []) {
+  const el = document.createElement("div");
+  el.className = "banner " + cls;
+  el.innerHTML = `<span>${html}</span>`;
+  for (const [label, fn] of actions) {
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = label;
+    b.onclick = () => { fn(); el.remove(); }; el.appendChild(b);
+  }
+  const x = document.createElement("button"); x.className = "btn"; x.textContent = "✕"; x.onclick = () => el.remove();
+  el.appendChild(x);
+  $("#banners").appendChild(el);
+  return el;
+}
+function toast(msg, cls = "") { const el = banner(esc(msg), cls); setTimeout(() => el.remove(), 6000); }
+
+/* ---------- Rendering ---------- */
+function renderAll() {
+  const p = db.projekt || {};
+  $("#prj-title").textContent = p.bezeichnung || "Rechnungsprüfung";
+  $("#prj-sub").textContent = [p.adresse, p.auftragnehmer?.name && "AN: " + p.auftragnehmer.name, p.gewerk].filter(Boolean).join(" · ");
+  document.title = `Rechnungsprüfung LPH 8 – ${p.bezeichnung || ""}`;
+  $("#inv-select").innerHTML = db.rechnungen.map(r =>
+    `<option value="${esc(r.id)}" ${r.id === currentId ? "selected" : ""}>${esc(r.bezeichnung)} · ${esc(r.rechnungsnummer)} vom ${deDate(r.datum)}</option>`).join("");
+  $("#btn-edit").classList.toggle("on", ui.edit);
+  if (!db.rechnungen.length) { ["#meta", "#kpis", "#release", "#blocks", "#filters", "#pos-table", "#result"].forEach(s => $(s).innerHTML = ""); renderHistory(); return; }
+  const i = inv();
+  $("#print-inv").textContent = `${i.bezeichnung} Nr. ${i.rechnungsnummer} vom ${deDate(i.datum)} – Prüfprotokoll`;
+  renderMeta(); renderKpis(); renderBlocks(); renderFilters(); renderTable(); renderResult(); renderHistory();
+}
+
+function renderMeta() {
+  const i = inv(), p = db.projekt, k = kond(i), an = p.auftragnehmer || {}, pr = p.pruefer || {};
+  const view = (label, val) => `<div><span>${label}</span><b>${esc(val ?? "–")}</b></div>`;
+  const edit = (label, key, val, type = "text") => `<div><span>${label}</span><input data-meta="${key}" type="${type}" value="${esc(val ?? "")}"></div>`;
+  const kin = (label, key) => `<div><span>${label}</span><input data-kond="${key}" inputmode="decimal" value="${fmt(k[key])}"></div>`;
+  const ang = i.angaben_rechnung || {};
+  let html;
+  if (!ui.edit) {
+    html = [
+      view("Rechnung", `${i.bezeichnung} Nr. ${i.rechnungsnummer}`),
+      view("Rechnungsdatum / Eingang", `${deDate(i.datum)} / ${deDate(i.eingang)}`),
+      view("Auftragnehmer", `${an.name || ""}${an.projektnummer ? " (Proj. " + an.projektnummer + ")" : ""}`),
+      view("Ausführungszeitraum", i.ausfuehrungszeitraum || "–"),
+      view("Abrechnungsart", i.abrechnungsart === "kumuliert" ? "kumuliert" : "inkrementell"),
+      view("Konditionen", `${fmt(k.abgebot_pct, 2)} % Abgebot · ${fmt(k.mwst_pct, 0)} % USt · ${fmt(k.skonto_pct, 2)} % Skonto`),
+      view("LV-Grundlage", `${db.lv?.quelle || "–"} · ${eur(db.lv?.angebotssumme_netto || 0)} netto`),
+      view("Prüfer / Prüfdatum", `${pr.name || ""} · ${deDate(i.pruefdatum)}`),
+    ].join("");
+  } else {
+    html = [
+      edit("Bezeichnung", "bezeichnung", i.bezeichnung), edit("Kurz", "kurz", i.kurz),
+      edit("Rechnungsnummer", "rechnungsnummer", i.rechnungsnummer), edit("Rechnungsdatum", "datum", i.datum, "date"),
+      edit("Eingang", "eingang", i.eingang, "date"), edit("Prüfdatum", "pruefdatum", i.pruefdatum, "date"),
+      edit("Ausführungszeitraum", "ausfuehrungszeitraum", i.ausfuehrungszeitraum), edit("Skontofrist", "skonto_frist", i.skonto_frist, "date"),
+      `<div><span>Abrechnungsart</span><select data-meta="abrechnungsart">
+        <option value="inkrementell" ${i.abrechnungsart !== "kumuliert" ? "selected" : ""}>inkrementell</option>
+        <option value="kumuliert" ${i.abrechnungsart === "kumuliert" ? "selected" : ""}>kumuliert</option></select></div>`,
+      `<div><span>Bisherige Zahlungen brutto</span><input data-meta="bisherige_zahlungen_brutto" data-num="1" inputmode="decimal" value="${fmt(i.bisherige_zahlungen_brutto || 0)}"></div>`,
+      kin("Abgebot %", "abgebot_pct"), kin("USt %", "mwst_pct"), kin("Skonto %", "skonto_pct"),
+      ...[["netto", "Netto lt. Rechnung"], ["netto_nach_abgebot", "Netto n. Abgebot lt. Rg."], ["brutto", "Brutto lt. Rechnung"], ["zahlbetrag_skonto", "Zahlbetrag Skonto lt. Rg."]]
+        .map(([key, l]) => `<div><span>${l}</span><input data-ang="${key}" inputmode="decimal" value="${ang[key] != null ? fmt(ang[key]) : ""}"></div>`),
+      `<div><span>&nbsp;</span><button class="btn danger" id="btn-del-inv" type="button">Rechnung löschen</button></div>`,
+    ].join("");
+  }
+  $("#meta").innerHTML = html;
+}
+
+const KPI_COLS = [["netto", k => "Netto"], ["netto_nach_abgebot", k => `nach ${fmt(k.abgebot_pct, 0)} % Abgebot`],
+  ["brutto", k => `Brutto (${fmt(k.mwst_pct, 0)} % USt)`], ["zahlbetrag_skonto", k => `mit ${fmt(k.skonto_pct, 0)} % Skonto`]];
+
+function renderKpis() {
+  const i = inv(), k = kond(i), g = sums(i, false), p = sums(i, true);
+  const vorher = Number(i.bisherige_zahlungen_brutto) || 0;
+  const cols = vorher ? [...KPI_COLS.slice(0, 3), ["zahlbetrag", () => "nach bisherigen Zahlungen"], KPI_COLS[3]] : KPI_COLS;
+  let h = `<div class="h"></div>` + cols.map(([, l]) => `<div class="h" style="text-align:right">${l(k)}</div>`).join("");
+  h += `<div class="lbl row-g">Gefordert ${esc(i.kurz)}</div>` + cols.map(([key]) => `<div class="v row-g">${eur(g[key])}</div>`).join("");
+  h += `<div class="lbl row-p">Geprüft</div>` + cols.map(([key]) => `<div class="v row-p">${eur(p[key])}</div>`).join("");
+  h += `<div class="lbl row-d">Differenz</div>` + cols.map(([key]) => `<div class="v row-d">${signed(r2(p[key] - g[key]))}</div>`).join("");
+  $("#kpis").style.gridTemplateColumns = `150px repeat(${cols.length}, minmax(0, 1fr))`;
+  $("#kpis").innerHTML = h;
+
+  const ang = i.angaben_rechnung || {};
+  const keys = Object.keys(ang).filter(key => ang[key] != null && g[key] != null);
+  const bad = keys.filter(key => r2(ang[key]) !== r2(g[key]));
+  const lvm = lvMap();
+  const rechenfehler = i.positionen.filter(x => x.betrag_rechnung != null && r2(x.betrag_rechnung) !== betrag(x, false));
+  const epAbw = i.positionen.filter(x => lvm[x.oz] && lvm[x.oz].typ !== "Nachtrag" && r2(x.ep) !== r2(lvm[x.oz].ep));
+  const checks = [];
+  if (keys.length) checks.push(bad.length ? ["bad", `Rechnungssummen weichen ab: ${bad.join(", ")}`] : ["ok", "Rechnung rechnerisch richtig (Summen, Abgebot, USt, Skonto nachgerechnet)"]);
+  checks.push(rechenfehler.length ? ["bad", `Rechenfehler in Pos. ${rechenfehler.map(x => x.oz).join(", ")}`] : ["ok", "Positionsbeträge = Menge × EP"]);
+  checks.push(epAbw.length ? ["warn", `EP weicht vom LV ab: Pos. ${epAbw.map(x => x.oz).join(", ")}`] : ["ok", "Einheitspreise der LV-Positionen = Vertrags-EP"]);
+  if (i.skonto_frist) {
+    const over = todayIso() > i.skonto_frist;
+    checks.push([over ? "warn" : "ok", `Skontofrist lt. Rechnung: ${deDate(i.skonto_frist)}${over ? " – abgelaufen" : ""}`]);
+  }
+  const diff = r2(p.zahlbetrag - g.zahlbetrag);
+  $("#release").innerHTML = `
+    <div class="small">Zur Abschlagszahlung freigegeben (brutto)</div>
+    <div class="big">${eur(p.zahlbetrag)}</div>
+    <div class="small">bei Skontoabzug: <b>${eur(p.zahlbetrag_skonto)}</b> · Kürzung ${signed(diff)}${g.zahlbetrag ? ` (${fmt(diff / g.zahlbetrag * 100, 1)} %)` : ""}</div>
+    ${checks.map(([c, t]) => `<div class="chk ${c}"><span class="ic">${c === "ok" ? "✓" : "!"}</span><span>${esc(t)}</span></div>`).join("")}
+    ${vorher ? `<div class="small" style="margin-top:4px"><b>Bisherige Abschläge (${(i.zahlungen || []).length}): ${eur(vorher)} brutto</b><br>
+      ${(i.zahlungen || []).map(z => `${esc(z.rechnung)} vom ${deDate(z.rechnungsdatum)}: ${eur((z.brutto || 0) + (z.skonto_brutto || 0))}
+        (gezahlt ${deDate(z.datum)}${z.skonto_brutto ? `, inkl. Skonto ${eur(z.skonto_brutto)}` : ""})`).join("<br>")}</div>` : ""}`;
+}
+
+function countStatus(list) {
+  const c = { gruen: 0, gelb: 0, rot: 0, "": 0 };
+  list.forEach(p => c[p.status in c ? p.status : ""]++);
+  return c;
+}
+const dotsHtml = c => `<div class="dots">${["gruen", "gelb", "rot"].map(s => `<span class="dot ${s}">${c[s]} ${AMPEL[s]}</span>`).join("")}${c[""] ? `<span class="dot offen">${c[""]} offen</span>` : ""}</div>`;
+
+function renderBlocks() {
+  const i = inv();
+  $("#blocks").innerHTML = blocksOf(i).map(b => {
+    const list = i.positionen.filter(p => inBlock(p, b));
+    const g = r2(list.reduce((a, p) => a + betrag(p, false), 0)), pr = r2(list.reduce((a, p) => a + betrag(p, true), 0));
+    return `<div class="card block-card"><h3>${esc(b.titel)} <small style="color:var(--muted);font-weight:500">(${list.length} Pos.)</small></h3>
+      <div class="hint">${esc(b.hinweis || "")}</div>
+      <div class="nums"><div><span>Gefordert</span><b>${eur(g)}</b></div><div><span>Geprüft</span><b style="color:var(--navy)">${eur(pr)}</b></div>
+      <div><span>Differenz</span><b class="${pr - g < 0 ? "neg" : ""}">${signed(r2(pr - g))}</b></div></div>${dotsHtml(countStatus(list))}</div>`;
+  }).join("");
+}
+
+function renderFilters() {
+  const i = inv(), c = countStatus(i.positionen);
+  const chip = (s, label, n) => `<button class="chip ${s} ${ui.status === s ? "active" : ""}" data-status="${s}">${label} (${n})</button>`;
+  const rf = i.positionen.filter(needsAnswer), rfOpen = rf.filter(p => !hasAnswer(p)).length;
+  $("#filters").innerHTML = (IS_AN ? chip("rueckfrage", `Rückfragen offen`, rfOpen) : "") +
+    chip("alle", "Alle", i.positionen.length) + chip("gruen", "Grün", c.gruen) + chip("gelb", "Gelb", c.gelb) +
+    chip("rot", "Rot", c.rot) + (c[""] ? chip("offen", "offen", c[""]) : "") +
+    `<span style="font-size:12px;color:var(--wahl-head);font-weight:700">Stellungnahmen: ${rf.length - rfOpen} / ${rf.length} Rückfragen beantwortet</span>` +
+    `<select id="f-block"><option value="alle">Alle Blöcke</option>${blocksOf(i).map(b => `<option value="${b.id}" ${ui.block === b.id ? "selected" : ""}>${esc(b.titel)}</option>`).join("")}</select>
+     <input type="search" id="f-search" placeholder="Suche OZ, Text, Vermerk, Stellungnahme …" value="${esc(ui.search)}">
+     <span class="spacer"></span><span style="color:var(--muted);font-size:12px">${IS_AN
+       ? "Nur die grüne Spalte ist editierbar – Eingaben werden automatisch gespeichert"
+       : "Prüf-Menge / Prüf-EP / Ampel / Vermerke direkt in der Tabelle bearbeiten · Enter = nächste Zeile"}</span>`;
+  const chipEl = $(`#filters .chip[data-status="rueckfrage"]`); if (chipEl) chipEl.classList.add("open");
+}
+
+function visible(p) {
+  if (ui.status === "rueckfrage") { if (!needsAnswer(p) || hasAnswer(p)) return false; }
+  else if (ui.status !== "alle" && (ui.status === "offen" ? (p.status || "") !== "" : p.status !== ui.status)) return false;
+  if (ui.block !== "alle" && p.block !== ui.block) return false;
+  if (ui.search) {
+    const q = ui.search.toLowerCase();
+    return [p.oz, p.kurztext, p.kommentar, p.stellungnahme_an, p.kategorie].some(v => String(v || "").toLowerCase().includes(q));
+  }
+  return true;
+}
+
+function renderTable() {
+  const i = inv(), lvm = lvMap(), prior = priorQty(i), kurz = esc(i.kurz);
+  const cols = 16 + (ui.edit ? 1 : 0);
+  let h = `<thead><tr>
+    <th class="oz">OZ</th><th>Kurztext</th><th>LV-<br>Menge</th><th>ME</th>
+    <th>Menge<br>${kurz}</th><th>EP<br>${kurz}</th><th>Betrag<br>${kurz}</th>
+    <th class="pr">Prüf-<br>Menge</th><th class="pr">Prüf-EP</th><th class="pr">Prüf-<br>Betrag</th><th>Differenz</th><th>% LV<br>(kum.)</th>
+    <th>Ampel</th><th>Kat.</th><th>Prüfvermerk JWGI</th><th class="wahl">Stellungnahme Elektriker (Fa. Wahl)</th>${ui.edit ? "<th></th>" : ""}</tr></thead><tbody>`;
+  for (const b of blocksOf(i)) {
+    const idx = i.positionen.map((p, n) => n).filter(n => inBlock(i.positionen[n], b)).sort((x, y) => cmpOz(i.positionen[x].oz, i.positionen[y].oz));
+    const shown = idx.filter(n => visible(i.positionen[n]));
+    if (!shown.length) continue;
+    h += `<tr class="blockrow"><td colspan="${cols}">${esc(b.titel)}<small>${esc(b.hinweis || "")}</small></td></tr>`;
+    for (const n of shown) h += rowHtml(i, i.positionen[n], n, lvm, prior);
+    h += `<tr class="subtotal" data-block="${b.id}"><td class="oz"></td><td>Zwischensumme ${esc(b.titel.split(" – ")[0])}</td><td colspan="4"></td>
+      <td class="num s-g"></td><td colspan="2"></td><td class="num s-p"></td><td class="num s-d"></td><td colspan="${ui.edit ? 6 : 5}"></td></tr>`;
+  }
+  h += `</tbody><tfoot><tr><td class="oz"></td><td>Summe netto (vor Abgebot)${ui.status !== "alle" || ui.block !== "alle" || ui.search ? " – gesamte Rechnung" : ""}</td><td colspan="4"></td>
+    <td class="num t-g"></td><td colspan="2"></td><td class="num t-p"></td><td class="num t-d"></td><td colspan="${ui.edit ? 6 : 5}"></td></tr></tfoot>`;
+  $("#pos-table").innerHTML = h;
+  refreshComputed();
+  autosizeAll();
+}
+
+function autosizeAll() {
+  $$("#pos-table textarea").forEach(autosize);
+  requestAnimationFrame(() => $$("#pos-table textarea").forEach(autosize));
+}
+
+function rowHtml(i, p, n, lvm, prior) {
+  const lv = lvm[p.oz] || {};
+  const tag = lv.typ === "Nachtrag" || p.lv_menge == null ? `<span class="tag nt">NT</span>` : lv.typ === "Bedarf" ? `<span class="tag bed">Bedarf</span>` : "";
+  const st = p.status || "";
+  const lock = IS_AN ? ` readonly tabindex="-1" title="schreibgeschützt (Prüfwert JWGI)"` : "";
+  const numIn = (f, d = 2) => `<input class="n" data-i="${n}" data-f="${f}" inputmode="decimal" value="${fmt(p[f], d)}"${lock}>`;
+  const ta = (f, ph, ro) => `<textarea data-i="${n}" data-f="${f}" rows="1" placeholder="${ro ? "" : ph}"${ro ? lock : ""}>${esc(p[f] || "")}</textarea><div class="print-only">${esc(p[f] || "")}</div>`;
+  const dis = IS_AN ? " disabled" : "";
+  const epWarn = lv.typ && lv.typ !== "Nachtrag" && r2(p.pruef_ep) !== r2(lv.ep) ? ` <span class="warn-ic" title="Prüf-EP weicht vom LV-EP ${fmt(lv.ep)} € ab">≠LV</span>` : "";
+  const rfWarn = p.betrag_rechnung != null && r2(p.betrag_rechnung) !== betrag(p, false) ? ` <span class="warn-ic" title="lt. Rechnung ${eur(p.betrag_rechnung)} – Rechenfehler">!</span>` : "";
+  return `<tr class="st-${st || "offen"}" data-i="${n}">
+    <td class="oz">${esc(p.oz)}</td>
+    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${tag}${esc(p.kurztext)}`}</td>
+    <td class="num">${p.lv_menge == null ? "–" : fmt(p.lv_menge)}</td>
+    <td class="c">${esc(p.einheit)}</td>
+    <td class="num">${ui.edit ? numIn("menge") : fmt(p.menge)}</td>
+    <td class="num">${ui.edit ? numIn("ep") : eur(p.ep)}</td>
+    <td class="num c-g">${eur(betrag(p, false))}${rfWarn}</td>
+    <td class="num pr">${numIn("pruef_menge")}</td>
+    <td class="num pr">${numIn("pruef_ep")}${epWarn}</td>
+    <td class="num pr c-p" style="font-weight:700;color:var(--navy)"></td>
+    <td class="num c-d"></td>
+    <td class="num c-pct"></td>
+    <td class="c"><select class="amp ${st || "offen"}" data-i="${n}" data-f="status"${dis}>
+      ${["gruen", "gelb", "rot", ""].map(s => `<option value="${s}" ${s === st ? "selected" : ""}>${AMPEL[s]}</option>`).join("")}</select></td>
+    <td class="c"><select class="kat" data-i="${n}" data-f="kategorie"${dis}>
+      ${["", "A", "B", "C"].map(s => `<option value="${s}" ${s === (p.kategorie || "") ? "selected" : ""}>${s || "–"}</option>`).join("")}</select></td>
+    <td class="kom">${ta("kommentar", "Prüfvermerk …", IS_AN)}${IS_AN ? "" :
+      `<input class="hint no-print" data-i="${n}" data-f="pdf_hinweis" value="${esc(p.pdf_hinweis || "")}" placeholder="PDF-Stempel-Kurzhinweis (leer = automatisch)" title="Kurzhinweis im gestempelten Rechnungs-PDF. Platzhalter: {mehrmenge} {pruef_ep} {pruef_betrag} {diff}">`}</td>
+    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …")}</td>
+    ${ui.edit ? `<td class="c"><button class="del" data-act="del" data-i="${n}" title="Position löschen">🗑</button></td>` : ""}
+  </tr>`;
+}
+
+function refreshComputed() {
+  const i = inv(), prior = priorQty(i);
+  $$("#pos-table tbody tr[data-i]").forEach(tr => {
+    const p = i.positionen[+tr.dataset.i]; if (!p) return;
+    const pb = betrag(p, true), d = r2(pb - betrag(p, false)), pct = pctLv(i, p, prior);
+    tr.querySelector(".c-g").firstChild.textContent = eur(betrag(p, false));
+    tr.querySelector(".c-p").textContent = eur(pb);
+    const cd = tr.querySelector(".c-d"); cd.textContent = d ? signed(d) : eur(0); cd.className = "num c-d " + (d < 0 ? "neg" : d > 0 ? "pos-v" : "");
+    const cp = tr.querySelector(".c-pct"); cp.textContent = pct == null ? "–" : fmt(pct * 100, 1) + " %";
+    cp.className = "num c-pct " + (pct > 1.0000001 ? "over" : ""); cp.title = pct > 1.0000001 ? "Mehrmenge gegenüber LV" : "";
+  });
+  for (const b of blocksOf(i)) {
+    const tr = $(`#pos-table tr.subtotal[data-block="${b.id}"]`); if (!tr) continue;
+    const list = i.positionen.filter(p => inBlock(p, b));
+    const g = r2(list.reduce((a, p) => a + betrag(p, false), 0)), pr = r2(list.reduce((a, p) => a + betrag(p, true), 0));
+    tr.querySelector(".s-g").textContent = eur(g); tr.querySelector(".s-p").textContent = eur(pr); tr.querySelector(".s-d").textContent = signed(r2(pr - g));
+  }
+  const g = sums(i, false).netto, p = sums(i, true).netto;
+  const tf = $("#pos-table tfoot");
+  if (tf) { tf.querySelector(".t-g").textContent = eur(g); tf.querySelector(".t-p").textContent = eur(p); tf.querySelector(".t-d").textContent = signed(r2(p - g)); }
+  renderKpis(); renderBlocks(); renderResult();
+}
+
+function renderResult() {
+  const i = inv(), p = sums(i, true), k = kond(i);
+  const sumKat = (kat, pruef) => r2(i.positionen.filter(x => x.kategorie === kat).reduce((a, x) => a + (pruef ? betrag(x, true) : r2(betrag(x, true) - betrag(x, false))), 0));
+  const pr = db.projekt.pruefer || {};
+  $("#result").innerHTML = `
+    <div class="card"><h2>Prüfergebnis und Zahlungsempfehlung</h2><table>
+      <tr><td>Zur Abschlagszahlung freigegeben (brutto)</td><td style="color:var(--navy);font-size:15px">${eur(p.zahlbetrag)}</td></tr>
+      <tr><td>bei fristgerechtem Skontoabzug (${fmt(k.skonto_pct, 0)} %)</td><td>${eur(p.zahlbetrag_skonto)}</td></tr>
+      <tr><td>Kat. A – Kürzungen (endgültig, netto)</td><td class="neg">${signed(sumKat("A"))}</td></tr>
+      <tr><td>Kat. B – vorläufig gesperrt bis Nachweis (netto)</td><td class="neg">${signed(sumKat("B"))}</td></tr>
+      <tr><td>Kat. C – Nachträge vorläufig freigegeben (netto, geprüft)</td><td>${eur(sumKat("C", true))}</td></tr></table>
+      <div class="vorbehalt">Die Rechnung wurde sachlich und rechnerisch geprüft. Die Freigabe erfolgt als Abschlagszahlung unter Vorbehalt der
+      Schlussrechnungsprüfung und stellt kein Anerkenntnis von Mengen, Preisen oder Nachträgen dar. Gesperrte Beträge (Kat. B) werden nach Vorlage
+      der angeforderten Nachweise neu bewertet.</div></div>
+    <div class="card"><h2>Legende</h2><div class="legend">
+      ${Object.entries(db.ampel || {}).map(([s, t]) => `<div><span class="dot ${s}">${AMPEL[s]}</span>${esc(t.split(" – ").slice(1).join(" – ") || t)}</div>`).join("")}
+      ${Object.entries(db.kategorien || {}).map(([s, t]) => `<div><span class="dot offen">Kat. ${s}</span>${esc(t)}</div>`).join("")}
+      <div><span class="dot" style="background:var(--wahl);color:var(--wahl-head)">grün</span>Spalte „Stellungnahme Elektriker (Fa. Wahl)“ – Eintragungen des AN</div>
+    </div></div>`;
+  $("#signs").innerHTML = `<div><p>${esc(pr.ort || "")}, den ____________________</p>Aufgestellt / sachlich und rechnerisch geprüft:<br>${esc(pr.buero || "")}, ${esc(pr.name || "")}</div>
+    <div><p>Leingarten, den ____________________</p>Freigabe Bauherr:<br>${esc(db.projekt.bauherr || "")}</div>`;
+}
+
+function renderHistory() {
+  const h = (db.historie || []).slice(-200).reverse();
+  $("#hist").innerHTML = `<summary>Änderungsprotokoll (${db.historie?.length || 0} Einträge)</summary>
+    <div style="max-height:320px;overflow:auto"><table><thead><tr><th>Zeit</th><th>Bearbeiter</th><th>Rechnung</th><th>OZ</th><th>Feld / Aktion</th><th>alt</th><th>neu</th></tr></thead><tbody>
+    ${h.map(e => `<tr><td>${esc((e.ts || "").replace("T", " "))}</td><td>${esc(e.user)}</td><td>${esc(e.rechnung || "")}</td><td>${esc(e.oz || "")}</td>
+      <td>${esc(e.feld || e.aktion || "")}</td><td>${esc(e.alt ?? "")}</td><td>${esc(e.neu ?? "")}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function autosize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
+
+/* ---------- Ereignisse: Tabelle ---------- */
+const table = $("#pos-table");
+table.addEventListener("focusin", e => { const el = e.target; if (el.dataset.f) el.dataset.old = inv().positionen[+el.dataset.i]?.[el.dataset.f] ?? ""; });
+table.addEventListener("input", e => {
+  const el = e.target, f = el.dataset.f; if (!f || el.tagName === "SELECT") return;
+  if (IS_AN && f !== "stellungnahme_an") return;
+  const p = inv().positionen[+el.dataset.i];
+  if (!("old" in el.dataset)) el.dataset.old = p[f] ?? "";
+  if (NUM_FIELDS.has(f)) {
+    const v = parseNum(el.value); el.classList.toggle("invalid", Number.isNaN(v));
+    if (Number.isNaN(v)) return;
+    p[f] = v;
+    if (f === "menge" || f === "ep") p.betrag_rechnung = betrag(p, false);
+    refreshComputed();
+  } else {
+    p[f] = el.value;
+    if (el.tagName === "TEXTAREA") { autosize(el); el.nextElementSibling.textContent = el.value; }
+  }
+  touch();
+});
+table.addEventListener("change", e => {
+  const el = e.target, f = el.dataset.f; if (!f) return;
+  if (IS_AN && f !== "stellungnahme_an") return;
+  const p = inv().positionen[+el.dataset.i];
+  if (el.tagName === "SELECT" && !("old" in el.dataset)) el.dataset.old = p[f] ?? "";
+  if (el.tagName === "SELECT") {
+    p[f] = el.value;
+    if (f === "status") { el.className = "amp " + (el.value || "offen"); el.closest("tr").className = "st-" + (el.value || "offen"); renderFilters(); }
+    refreshComputed();
+  } else if (NUM_FIELDS.has(f) && !Number.isNaN(parseNum(el.value))) {
+    el.value = fmt(p[f]);
+  }
+  const fmtLog = v => NUM_FIELDS.has(f) ? fmt(v) : f === "status" ? AMPEL[v || ""] : v;
+  logChange(p.oz, f, fmtLog(el.dataset.old), fmtLog(p[f]));
+  el.dataset.old = p[f];
+  if (f === "stellungnahme_an") renderFilters();
+  touch();
+});
+table.addEventListener("keydown", e => {
+  const el = e.target;
+  if (e.key !== "Enter" || el.tagName !== "INPUT" || !el.dataset.f) return;
+  e.preventDefault();
+  const all = $$(`#pos-table input[data-f="${el.dataset.f}"]`), k = all.indexOf(el);
+  (all[k + (e.shiftKey ? -1 : 1)] || el).focus();
+  (all[k + (e.shiftKey ? -1 : 1)] || el).select?.();
+});
+table.addEventListener("click", e => {
+  const b = e.target.closest("[data-act=del]"); if (!b) return;
+  const i = inv(), p = i.positionen[+b.dataset.i];
+  if (!confirm(`Position ${p.oz} „${p.kurztext}“ aus ${i.kurz} entfernen?`)) return;
+  i.positionen.splice(+b.dataset.i, 1);
+  logChange(p.oz, "Position entfernt", eur(betrag(p, false)), "");
+  touch(); renderAll();
+});
+
+/* ---------- Ereignisse: Kopf / Filter / Meta ---------- */
+$("#inv-select").addEventListener("change", e => { currentId = e.target.value; settings.lastInvoice = currentId; saveSettings(); ui.status = "alle"; renderAll(); });
+$("#filters").addEventListener("click", e => { const c = e.target.closest("[data-status]"); if (!c) return; ui.status = c.dataset.status; renderFilters(); renderTable(); });
+$("#filters").addEventListener("change", e => { if (e.target.id === "f-block") { ui.block = e.target.value; renderTable(); } });
+$("#filters").addEventListener("input", e => { if (e.target.id === "f-search") { ui.search = e.target.value; renderTable(); } });
+$("#meta").addEventListener("change", e => {
+  if (IS_AN) return;
+  const el = e.target, i = inv();
+  if (el.dataset.meta) {
+    const key = el.dataset.meta, old = i[key];
+    i[key] = el.dataset.num ? parseNum(el.value) || 0 : (el.value || null);
+    logChange("", "Rechnung: " + key, old, i[key]);
+  } else if (el.dataset.kond) {
+    const v = parseNum(el.value); if (Number.isNaN(v)) return;
+    i.konditionen = Object.assign({}, i.konditionen, { [el.dataset.kond]: v });
+    logChange("", "Kondition: " + el.dataset.kond, "", v);
+  } else if (el.dataset.ang) {
+    i.angaben_rechnung ||= {};
+    const v = parseNum(el.value);
+    i.angaben_rechnung[el.dataset.ang] = el.value.trim() === "" || Number.isNaN(v) ? null : v;
+  } else return;
+  touch(); renderAll();
+});
+$("#meta").addEventListener("click", e => {
+  if (e.target.id !== "btn-del-inv") return;
+  const i = inv();
+  if (!confirm(`${i.bezeichnung} ${i.rechnungsnummer} mit ${i.positionen.length} Positionen endgültig löschen?`)) return;
+  db.rechnungen = db.rechnungen.filter(r => r.id !== i.id);
+  db.historie.push({ ts: nowIso(), user: settings.user || "Browser", rechnung: i.id, aktion: "Rechnung gelöscht" });
+  currentId = db.rechnungen[db.rechnungen.length - 1]?.id; touch(); renderAll();
+});
+
+$("#btn-edit").onclick = () => { ui.edit = !ui.edit; renderAll(); };
+$("#btn-print").onclick = () => { $$("#pos-table textarea").forEach(t => t.nextElementSibling.textContent = t.value); window.print(); };
+$("#btn-reset").onclick = () => {
+  if (!window.AUDIT_SEED) return toast("audit_data.js nicht geladen.", "err");
+  if (confirm("Alle im Browser gespeicherten Änderungen verwerfen und die Ausgangsdaten aus audit_data.js laden?\n(Vorher ggf. JSON exportieren.)")) adoptSeed(window.AUDIT_SEED);
+};
+
+function download(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+$("#btn-export").onclick = () => {
+  db.meta.exportiert_am = nowIso();
+  db.meta.lokal_geaendert = false;
+  download("audit_data.json", JSON.stringify(db, null, 2) + "\n", "application/json");
+  saveLocal();
+  toast("Exportiert. Jetzt im Projektordner Aktualisieren.bat doppelklicken – Ihre Änderungen werden automatisch aus dem Download-Ordner übernommen.", "ok");
+};
+$("#btn-import").onclick = () => $("#file-import").click();
+$("#file-import").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text()); validateDb(d);
+    if (d.meta?.export_rolle === "elektriker") {
+      const n = mergeStellungnahmen(db, d, true);
+      db.historie.push({ ts: nowIso(), user: settings.user || "Browser", aktion: "Antwortdatei Fa. Wahl importiert", neu: `${f.name} (${n} Stellungnahmen)` });
+      saveLocal(); renderAll();
+      return toast(`Antwort der Fa. Wahl übernommen: ${n} Stellungnahme(n). Prüfwerte wurden nicht verändert.`, "ok");
+    }
+    if (!confirm(`„${f.name}“ mit ${d.rechnungen.length} Rechnung(en) importieren? Der aktuelle Browser-Stand wird ersetzt.`)) return;
+    db = d; db.historie ||= [];
+    db.historie.push({ ts: nowIso(), user: settings.user || "Browser", aktion: "JSON importiert", neu: f.name });
+    currentId = db.rechnungen[db.rechnungen.length - 1]?.id; saveLocal(); renderAll(); toast("Import erfolgreich.", "ok");
+  } catch (err) { toast("Import fehlgeschlagen: " + err.message, "err"); }
+};
+$("#btn-csv").onclick = () => {
+  const i = inv(), prior = priorQty(i), n2 = x => x == null ? "" : fmt(x);
+  const head = ["Block", "OZ", "Kurztext", "LV-Menge", "ME", "Menge", "EP", "Betrag", "Prüf-Menge", "Prüf-EP", "Prüf-Betrag", "Differenz", "% LV kum.", "Ampel", "Kat.", "Prüfvermerk JWGI", "Stellungnahme Elektriker (Fa. Wahl)"];
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const rows = [...i.positionen].sort((a, b) => db.bloecke.findIndex(x => x.id === a.block) - db.bloecke.findIndex(x => x.id === b.block) || cmpOz(a.oz, b.oz)).map(p => {
+    const pct = pctLv(i, p, prior);
+    return [p.block, p.oz, p.kurztext, n2(p.lv_menge), p.einheit, n2(p.menge), n2(p.ep), n2(betrag(p, false)), n2(p.pruef_menge), n2(p.pruef_ep),
+      n2(betrag(p, true)), n2(r2(betrag(p, true) - betrag(p, false))), pct == null ? "" : fmt(pct * 100, 1), AMPEL[p.status || ""], p.kategorie || "", p.kommentar || "", p.stellungnahme_an || ""];
+  });
+  download(`${i.datum}_Rechnungspruefung_${i.id}_Positionen.csv`, "\ufeff" + [head, ...rows].map(r => r.map(q).join(";")).join("\r\n"), "text/csv;charset=utf-8");
+};
+
+/* ---------- Elektriker: Stellungnahme senden / Link ---------- */
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch {
+    const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch { ok = false; }
+    ta.remove(); return ok;
+  }
+}
+
+function answersText(i, user) {
+  const rows = [...i.positionen].sort((a, b) => cmpOz(a.oz, b.oz));
+  const answered = rows.filter(hasAnswer), open = rows.filter(p => needsAnswer(p) && !hasAnswer(p));
+  let t = `STELLUNGNAHME ${(db.projekt.auftragnehmer?.name || "AUFTRAGNEHMER").toUpperCase()}\n${db.projekt.bezeichnung}\n` +
+    `${i.bezeichnung} Nr. ${i.rechnungsnummer} vom ${deDate(i.datum)}\n` +
+    `Abgeschlossen am ${new Date().toLocaleString("de-DE")} von ${user}\n` +
+    `${answered.length} Stellungnahme(n)${open.length ? `, ${open.length} Rückfrage(n) ohne Antwort` : ""}\n` + "=".repeat(60) + "\n\n";
+  t += answered.map(p => `Pos. ${p.oz} – ${p.kurztext}\n  Ampel: ${AMPEL[p.status || ""]}${p.kategorie ? " / Kat. " + p.kategorie : ""}` +
+    ` · Gefordert ${eur(betrag(p, false))} · Geprüft ${eur(betrag(p, true))}\n  Prüfvermerk: ${p.kommentar || "–"}\n` +
+    `  STELLUNGNAHME: ${p.stellungnahme_an.trim()}`).join("\n\n");
+  if (open.length) t += `\n\nOhne Stellungnahme: Pos. ${open.map(p => p.oz).join(", ")}`;
+  return t;
+}
+
+async function uploadAnswers(i, upload, user) {
+  const answers = i.positionen.filter(hasAnswer).map(p => ({ oz: p.oz, stellungnahme_an: p.stellungnahme_an.trim() }));
+  const open = i.positionen.filter(p => needsAnswer(p) && !hasAnswer(p)).length;
+  const prj = db.projekt?.id || "altbau";
+  const payload = { schema: 1, projekt: prj, rechnung: i.id, rechnungsnummer: i.rechnungsnummer, von: user, am: nowIso(), antworten: answers };
+  const title = `Stellungnahme ${user} – ${db.projekt?.kurz || ""} ${i.kurz} ${i.rechnungsnummer} – ${answers.length} Antwort(en)`.replace(/\s+/g, " ");
+  const body = `**Stellungnahme abgeschlossen** von ${user} am ${new Date().toLocaleString("de-DE")}\n` +
+    `${answers.length} Stellungnahme(n)${open ? `, ${open} Rückfrage(n) ohne Antwort` : ""}\n\n` +
+    "```text\n" + answersText(i, user).replace(/```/g, "'''") + "\n```\n\n" +
+    `<!-- JWGI-STELLUNGNAHME:${b64encode(JSON.stringify(payload))} -->\n`;
+  const r = await fetch(`https://api.github.com/repos/${upload.repo}/issues`, {
+    method: "POST",
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${upload.token}`, "X-GitHub-Api-Version": "2022-11-28" },
+    body: JSON.stringify({ title, body }),
+  });
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  return r.json();
+}
+
+let lastMailto = "";
+$("#btn-send").onclick = async () => {
+  const i = inv();
+  $$("#pos-table textarea[data-f=stellungnahme_an]").forEach(t => { const p = i.positionen[+t.dataset.i]; if (p) p.stellungnahme_an = t.value; });
+  const n = i.positionen.filter(hasAnswer).length, open = i.positionen.filter(p => needsAnswer(p) && !hasAnswer(p)).length;
+  if (!n && !confirm("Es wurde noch keine Stellungnahme eingetragen. Trotzdem abschließen?")) return;
+  if (open && !confirm(`${open} Rückfrage(n) sind noch ohne Stellungnahme. Trotzdem abschließen und senden?`)) return;
+  if (!settings.user) {
+    const u = prompt("Ihr Name (wird im Prüfprotokoll vermerkt):", "Fa. Wahl");
+    if (u === null) return;
+    settings.user = u.trim() || "Fa. Wahl"; saveSettings();
+  }
+  i.stellungnahme_an_abgeschlossen = { am: nowIso(), von: settings.user, anzahl: n };
+  logChange("", "Stellungnahme abgeschlossen", "", `${n} Positionen`);
+  saveLocal();
+
+  const upload = db.meta?.upload;
+  if (upload?.token && upload?.repo) {
+    const btn = $("#btn-send"); btn.disabled = true; setState("Übertrage Stellungnahme …", "dirty");
+    try {
+      const issue = await uploadAnswers(i, upload, settings.user);
+      i.stellungnahme_an_abgeschlossen.uebermittelt = issue.number; saveLocal();
+      setState("Stellungnahme übermittelt " + new Date().toLocaleTimeString("de-DE"));
+      $("#sent-body").innerHTML = `<div class="legend">
+        <div class="chk ok"><span class="ic">✓</span><span>Ihre Stellungnahme (${n} Position(en)) wurde <b>erfolgreich an JAEGER Wohn- &amp; Gebäudeintelligenz übermittelt</b>.</span></div>
+        <div class="chk ok"><span class="ic">✓</span><span>Herr ${esc(db.projekt.pruefer?.titel || "Dr.-Ing. Jäger")} wird automatisch benachrichtigt.</span></div></div>
+        <div class="note" style="margin-top:10px">Sie müssen nichts weiter tun. Ergänzungen sind jederzeit möglich – einfach erneut auf „Stellungnahme abschließen“ klicken.</div>`;
+      $("#btn-mail-again").classList.add("hidden");
+      $("#dlg-sent").returnValue = ""; $("#dlg-sent").showModal();
+      return;
+    } catch (err) {
+      toast(`Automatische Übermittlung nicht möglich (${err.message}) – es wird stattdessen eine E-Mail vorbereitet.`, "err");
+    } finally { btn.disabled = false; }
+  }
+  $("#btn-mail-again").classList.remove("hidden");
+
+  const exp = structuredClone(db);
+  exp.meta = Object.assign({}, exp.meta, { export_rolle: "elektriker", exportiert_am: nowIso(), exportiert_von: settings.user });
+  const fname = `Stellungnahme_Wahl_${i.id}_${i.rechnungsnummer}_${todayIso()}.json`;
+  download(fname, JSON.stringify(exp, null, 2) + "\n", "application/json");
+
+  const text = answersText(i, settings.user);
+  const copied = await copyText(text);
+  const pr = db.projekt.pruefer || {};
+  const subject = `Stellungnahme Fa. Wahl – ${i.bezeichnung} ${i.rechnungsnummer} – ${db.projekt.bezeichnung}`;
+  let body = `Sehr geehrter Herr ${pr.titel || "Dr.-Ing. Jäger"},\n\nanbei unsere Stellungnahme zur Rechnungsprüfung (${n} Position(en)).\n` +
+    `Bitte die soeben heruntergeladene Datei „${fname}“ als Anhang beachten.\n\nMit freundlichen Grüßen\n${settings.user}\n\n` + text;
+  if (body.length > 1800) body = body.slice(0, 1700) + "\n\n[… gekürzt – vollständiger Text in der angehängten Datei]";
+  lastMailto = `mailto:${pr.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  location.href = lastMailto;
+  $("#sent-body").innerHTML = `<div class="legend">
+    <div class="chk ok"><span class="ic">✓</span><span>Datei <b>${esc(fname)}</b> wurde heruntergeladen (Ordner „Downloads“).</span></div>
+    <div class="chk ${copied ? "ok" : "warn"}"><span class="ic">${copied ? "✓" : "!"}</span><span>${copied ? "Alle Antworten wurden als Text in die Zwischenablage kopiert." : "Zwischenablage nicht verfügbar – Text steht in der E-Mail."}</span></div>
+    <div class="chk ok"><span class="ic">✓</span><span>Ihr E-Mail-Programm wurde mit einer Nachricht an <b>${esc(pr.email || "")}</b> geöffnet.</span></div></div>
+    <div class="note" style="margin-top:10px"><b>Letzter Schritt:</b> Die heruntergeladene Datei an die E-Mail anhängen und auf „Senden“ klicken.
+    Öffnet sich kein E-Mail-Programm, bitte die Datei einfach an ${esc(pr.email || "")} senden.</div>`;
+  $("#dlg-sent").returnValue = "";
+  $("#dlg-sent").showModal();
+};
+$("#dlg-sent").addEventListener("close", () => { if ($("#dlg-sent").returnValue === "mail" && lastMailto) location.href = lastMailto; });
+
+$("#btn-link").onclick = async () => {
+  const base = db.meta?.pages_url || (location.protocol.startsWith("http") ? location.origin + location.pathname : "");
+  if (!base) return toast("Noch keine Online-Adresse vorhanden – bitte zuerst Aktualisieren.bat im Projektordner ausführen.", "err");
+  const url = base.split(/[?#]/)[0] + "?role=elektriker";
+  const ok = await copyText(url);
+  toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort bitte separat (Telefon/SMS) mitteilen.`, "ok");
+};
+
+/* ---------- Dialog: neue Rechnung ---------- */
+$("#btn-new-inv").onclick = () => {
+  const f = $("#form-inv"), nr = Math.max(0, ...db.rechnungen.filter(r => r.typ === "Teilrechnung").map(r => r.nr || 0)) + 1;
+  f.reset(); f.nr.value = nr; f.datum.value = todayIso();
+  $("#dlg-inv").returnValue = "";
+  $("#dlg-inv").showModal();
+};
+$("#dlg-inv").addEventListener("close", () => {
+  if ($("#dlg-inv").returnValue !== "ok") return;
+  const f = $("#form-inv"), typ = f.typ.value, nr = +f.nr.value;
+  const id = typ === "Schlussrechnung" ? "SR" : `${nr}_TR`;
+  if (db.rechnungen.some(r => r.id === id)) return toast(`Rechnung ${id} existiert bereits.`, "err");
+  const src = db.rechnungen.length ? inv() : null;
+  const positionen = f.copy.value === "none" || !src ? [] : src.positionen.map(p => Object.assign(structuredClone(p), {
+    stellungnahme_an: "", kommentar: "", status: "", betrag_rechnung: null,
+    ...(f.copy.value === "oz" ? { menge: 0, pruef_menge: 0 } : {}) }));
+  const r = { id, typ, nr: typ === "Schlussrechnung" ? null : nr,
+    bezeichnung: typ === "Schlussrechnung" ? "Schlussrechnung" : `${nr}. Teilrechnung`, kurz: typ === "Schlussrechnung" ? "SR" : `${nr}. TR`,
+    rechnungsnummer: f.rechnungsnummer.value.trim(), datum: f.datum.value, eingang: null, pruefdatum: todayIso(), ausfuehrungszeitraum: "",
+    abrechnungsart: f.abrechnungsart.value, skonto_frist: f.skonto_frist.value || null,
+    bisherige_zahlungen_brutto: parseNum(f.bisherige_zahlungen_brutto.value) || 0, status: "in Prüfung", angaben_rechnung: {}, positionen };
+  db.rechnungen.push(r);
+  db.historie.push({ ts: nowIso(), user: settings.user || "Browser", rechnung: id, aktion: "Rechnung angelegt", neu: `${r.bezeichnung} ${r.rechnungsnummer}` });
+  currentId = id; settings.lastInvoice = id; saveSettings(); ui.edit = true; touch(); renderAll();
+  toast(`${r.bezeichnung} angelegt – Rechnungsdaten und Positionen erfassen (Bearbeitungsmodus aktiv).`, "ok");
+});
+
+/* ---------- Dialog: Position ---------- */
+$("#btn-add-pos").onclick = () => {
+  if (!db.rechnungen.length) return toast("Bitte zuerst eine Rechnung anlegen.", "err");
+  const f = $("#form-pos"); f.reset();
+  $("#lv-list").innerHTML = (db.lv?.positionen || []).map(p =>
+    `<option value="${esc(p.oz)} – ${esc(p.kurztext)}">${p.typ === "Nachtrag" ? "Nachtrag" : `${fmt(p.menge)} ${esc(p.einheit)} à ${eur(p.ep)}`}</option>`).join("");
+  $("#pos-block").innerHTML = db.bloecke.map(b => `<option value="${b.id}">${esc(b.titel)}</option>`).join("");
+  $("#dlg-pos").returnValue = "";
+  $("#dlg-pos").showModal();
+};
+$("#form-pos").lvsearch.addEventListener("change", e => {
+  const oz = e.target.value.split(" – ")[0].trim(), lv = lvMap()[oz], f = $("#form-pos");
+  if (!lv) return;
+  f.oz.value = lv.oz; f.kurztext.value = lv.kurztext; f.einheit.value = lv.einheit || "";
+  f.lv_menge.value = lv.menge == null ? "" : fmt(lv.menge); f.ep.value = fmt(lv.ep);
+  f.block.value = lv.typ === "Nachtrag" ? "NT" : lv.typ === "Bedarf" ? "REGIE" : "LV";
+});
+$("#dlg-pos").addEventListener("close", () => {
+  if ($("#dlg-pos").returnValue !== "ok") return;
+  const f = $("#form-pos"), i = inv(), oz = f.oz.value.trim();
+  if (i.positionen.some(p => p.oz === oz)) return toast(`Pos. ${oz} ist in ${i.kurz} bereits enthalten.`, "err");
+  const menge = parseNum(f.menge.value), ep = parseNum(f.ep.value), lvm = f.lv_menge.value.trim() === "" ? null : parseNum(f.lv_menge.value);
+  if ([menge, ep].some(Number.isNaN) || Number.isNaN(lvm)) return toast("Ungültige Zahl.", "err");
+  const lv = lvMap()[oz];
+  if (!lv) {
+    db.lv.positionen.push({ oz, kurztext: f.kurztext.value.trim(), gewerk: oz.split(".")[0], menge: lvm, einheit: f.einheit.value.trim(), ep, gp: 0,
+      typ: "Nachtrag", hinweis: `ohne LV-Grundlage, erstmals abgerechnet in ${i.kurz} ${i.rechnungsnummer}` });
+    db.lv.positionen.sort((a, b) => cmpOz(a.oz, b.oz));
+  }
+  i.positionen.push({ oz, kurztext: f.kurztext.value.trim(), block: f.block.value, einheit: f.einheit.value.trim(), lv_menge: lvm,
+    lv_ep: lv && lv.typ !== "Nachtrag" ? lv.ep : null, menge, ep, betrag_rechnung: r2(menge * ep), pruef_menge: menge, pruef_ep: ep,
+    status: "", kategorie: "", kommentar: "", stellungnahme_an: "" });
+  logChange(oz, "Position hinzugefügt", "", eur(r2(menge * ep)));
+  touch(); renderAll();
+});
+
+/* ---------- Dialog: Speicherort ---------- */
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+function syncModeView() { const m = $("#form-sync").mode.value; $$("#form-sync fieldset[data-mode]").forEach(fs => fs.classList.toggle("hidden", fs.dataset.mode !== m)); }
+function readSyncForm() {
+  const f = $("#form-sync");
+  ["user", "restUrl", "restToken", "ghOwner", "ghRepo", "ghBranch", "ghPath", "ghToken"].forEach(k => settings[k] = f[k].value.trim());
+  settings.mode = f.mode.value; settings.autoSync = f.autoSync.checked; saveSettings();
+}
+$("#btn-sync").onclick = () => {
+  const f = $("#form-sync");
+  ["user", "restUrl", "restToken", "ghOwner", "ghRepo", "ghBranch", "ghPath", "ghToken"].forEach(k => f[k].value = settings[k] || "");
+  f.mode.value = settings.mode || "local"; f.autoSync.checked = !!settings.autoSync; syncModeView();
+  $("#dlg-sync").returnValue = "cancel";
+  $("#dlg-sync").showModal();
+};
+$("#form-sync").addEventListener("change", e => { if (e.target.name === "mode") syncModeView(); });
+$("#dlg-sync").addEventListener("close", async () => {
+  const v = $("#dlg-sync").returnValue;
+  if (v === "cancel") return;
+  readSyncForm();
+  try {
+    if (v === "pull") { if (confirm("Browser-Stand durch den Remote-Stand ersetzen?")) await Remote.pull(); }
+    else if (v === "push") await Remote.push();
+    else toast("Einstellungen gespeichert.", "ok");
+  } catch (err) { toast(err.message, "err"); }
+});
+
+window.addEventListener("beforeunload", () => { if (dirty) saveLocal(); });
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(autosizeAll, 150); });
+init().catch(e => banner("Fehler beim Laden: " + esc(e.message), "err"));
+</script>
+</body>
+</html>
