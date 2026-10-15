@@ -400,7 +400,8 @@
 <script src="audit_data.enc.js" onerror="void 0"></script>
 <script>
 "use strict";
-const ROLE = new URLSearchParams(location.search).get("role") === "elektriker" ? "elektriker" : "pruefer";
+const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
+const ROLE = PUBLIC_SITE || new URLSearchParams(location.search).get("role") === "elektriker" ? "elektriker" : "pruefer";
 const IS_AN = ROLE === "elektriker";
 document.body.classList.toggle("role-elektriker", IS_AN);
 const STORE_KEY = "jwgi.rechnungspruefung.mitsch-altbau.v1" + (IS_AN ? ".elektriker" : "");
