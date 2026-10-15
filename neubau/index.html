@@ -183,6 +183,20 @@
   body.role-elektriker td.wahl textarea { background: #fff; border-color: #9cc77e; min-height: 46px; }
   body.role-elektriker .pruefer-only { display: none !important; }
   body:not(.role-elektriker) .elektriker-only { display: none !important; }
+body.role-auftraggeber .pruefer-only, body.role-elektriker .no-an { display: none !important; }
+body:not(.role-auftraggeber) .ag-only { display: none !important; }
+.role-badge.ag-only { background: #ddebf7; color: #1f3864; }
+.kosten { padding: 14px 18px; }
+.kosten .k-grid { display: grid; grid-template-columns: minmax(0, 1fr) 150px 80px; gap: 4px 14px; font-size: 13px; align-items: baseline; }
+.kosten .k-grid .v { text-align: right; font-variant-numeric: tabular-nums; }
+.kosten .k-grid .sum { font-weight: 700; border-top: 1px solid var(--line); padding-top: 4px; }
+.kosten .bar { position: relative; height: 14px; background: #eef1f5; border-radius: 7px; margin: 10px 0 4px; overflow: visible; }
+.kosten .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: var(--navy); }
+.kosten .bar .mark { position: absolute; top: -4px; bottom: -4px; width: 3px; border-radius: 2px; }
+.kosten .bar .mark.auftrag { background: #333; } .kosten .bar .mark.prog { background: var(--r); }
+.kosten .k-legend { font-size: 11px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+.kosten details { margin-top: 8px; font-size: 12px; } .kosten details table { width: 100%; border-collapse: collapse; }
+.kosten details td { padding: 2px 6px; border-bottom: 1px solid #eee; } .kosten details td.v { text-align: right; white-space: nowrap; }
   .chip.open.active { background: #2e7d32; border-color: #2e7d32; }
   .akte-btn { border: 1px solid #c9d3e3; background: #f4f7fb; color: var(--navy); border-radius: 99px; padding: 0 7px; font-size: 11px;
     font-weight: 700; cursor: pointer; margin-left: 4px; vertical-align: 1px; }
@@ -264,6 +278,7 @@
     </div>
     <div class="top-right">
       <span class="role-badge elektriker-only">Ansicht Fa. Wahl – nur grüne Spalte editierbar</span>
+      <span class="role-badge ag-only">Ansicht Bauherr / Architekt – nur lesen</span>
       <label for="inv-select">Rechnung</label>
       <select id="inv-select"></select>
       <span class="save-state" id="save-state">–</span>
@@ -278,6 +293,7 @@
     <button class="btn pruefer-only" id="btn-add-pos">＋ Position</button>
     <button class="btn pruefer-only" id="btn-new-inv">＋ Neue Rechnung (2. TR / SR)</button>
     <button class="btn pruefer-only" id="btn-link" title="Link für Fa. Wahl (Elektriker-Ansicht) kopieren">🔗 Link für Elektriker</button>
+    <button class="btn pruefer-only" id="btn-link-ag" title="Link für Bauherr und Architekt (Nur-Lese-Ansicht, eigenes Passwort) kopieren">🔗 Link Bauherr/Architekt</button>
     <span class="spacer"></span>
     <button class="btn pruefer-only" id="btn-export" title="Komplette Datenbank als audit_data.json herunterladen">⤓ JSON exportieren</button>
     <button class="btn pruefer-only" id="btn-import" title="audit_data.json oder Antwortdatei der Fa. Wahl einlesen">⤒ JSON / Antwort importieren</button>
@@ -297,6 +313,8 @@
       <div class="card release" id="release"></div>
     </div>
   </section>
+
+  <section class="card kosten no-an" id="kosten"></section>
 
   <section class="blocks" id="blocks"></section>
 
@@ -415,10 +433,13 @@
       </div>
       <label>Text<textarea name="text" rows="3" style="border:1px solid var(--line);border-radius:6px;padding:6px 8px"></textarea></label>
       <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="intern"> nur intern (wird online nicht veröffentlicht)</label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="nur_ag"> nur Bauherr/Architekt (für Fa. Wahl unsichtbar)</label>
       <div class="grid2">
         <label>Stand / Zusammenfassung<input name="stand"></label>
         <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-top:18px"><input type="checkbox" name="offen"> noch offen / strittig</label>
       </div>
+      <label id="akte-prognose">Auswirkung auf die Schlusssumme dieses Bauabschnitts (netto vor Abgebot, € – Minderung negativ, leer = nicht beziffert)
+        <input name="prognose" inputmode="decimal"></label>
     </fieldset>
     <div class="actions"><button class="btn pruefer-only" value="save" id="btn-akte-save">Speichern</button><button class="btn primary" value="close" formnovalidate>Schließen</button></div>
   </form>
@@ -442,15 +463,18 @@
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015204021" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261015205231" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261015205231" onerror="void 0"></script>
 <script>
 "use strict";
-const PUBLIC_SITE = !window.AUDIT_SEED && !!window.AUDIT_SEED_ENC;
-const ROLE = PUBLIC_SITE || new URLSearchParams(location.search).get("role") === "elektriker" ? "elektriker" : "pruefer";
-const IS_AN = ROLE === "elektriker";
+const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
+const ROLE_PARAM = new URLSearchParams(location.search).get("role");
+const ROLE = ROLE_PARAM === "auftraggeber" ? "auftraggeber" : PUBLIC_SITE || ROLE_PARAM === "elektriker" ? "elektriker" : "pruefer";
+const IS_AN = ROLE === "elektriker", IS_AG = ROLE === "auftraggeber", READONLY = IS_AN || IS_AG;
 document.body.classList.toggle("role-elektriker", IS_AN);
-const PROJECT_KEY = window.AUDIT_SEED?.projekt?.storage_key || window.AUDIT_SEED_ENC?.storage_key || "mitsch-altbau";
-const STORE_KEY = `jwgi.rechnungspruefung.${PROJECT_KEY}.v1` + (IS_AN ? ".elektriker" : "");
+document.body.classList.toggle("role-auftraggeber", IS_AG);
+const PROJECT_KEY = window.AUDIT_SEED?.projekt?.storage_key || window.AUDIT_SEED_ENC?.storage_key || window.AUDIT_SEED_ENC_AG?.storage_key || "mitsch-altbau";
+const STORE_KEY = `jwgi.rechnungspruefung.${PROJECT_KEY}.v1` + (IS_AN ? ".elektriker" : IS_AG ? ".auftraggeber" : "");
 const SETTINGS_KEY = STORE_KEY + ".settings";
 const SCHEMA_VERSION = 1;
 const AMPEL = { gruen: "Grün", gelb: "Gelb", rot: "Rot", "": "offen" };
@@ -549,9 +573,24 @@ async function decryptSeed(enc, pw) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+/** Entspricht public_payload() in deploy_pages.py – lokal für die Vorschau der Elektriker-/Auftraggeber-Ansicht. */
+function restrictFor(d) {
+  if (!READONLY) return d;
+  const hidden = x => x.intern || (IS_AN && x.nur_ag);
+  delete d.korrespondenz; d.historie = [];
+  for (const a of Object.values(d.akte || {})) { delete a.stand; a.eintraege = (a.eintraege || []).filter(x => !hidden(x)); }
+  d.themen = (d.themen || []).filter(t => !hidden(t));
+  for (const t of d.themen) {
+    delete t.stand; if (IS_AN) delete t.prognose_netto;
+    t.eintraege = (t.eintraege || []).filter(x => !hidden(x));
+  }
+  if (IS_AN) for (const r of d.rechnungen || []) delete r.leistungsstand_pct;
+  return d;
+}
+
 async function loadSeed() {
-  if (window.AUDIT_SEED) return structuredClone(window.AUDIT_SEED);
-  const enc = window.AUDIT_SEED_ENC;
+  if (window.AUDIT_SEED) return restrictFor(structuredClone(window.AUDIT_SEED));
+  const enc = IS_AG ? window.AUDIT_SEED_ENC_AG : window.AUDIT_SEED_ENC;
   if (!enc) return null;
   const pwKey = STORE_KEY + ".pw";
   const cached = sessionStorage.getItem(pwKey) || new URLSearchParams(location.hash.slice(1)).get("pw");
@@ -599,7 +638,7 @@ function mergeStellungnahmen(target, source, log) {
 
 async function init() {
   const seed = await loadSeed();
-  const local = safeParse(localStorage.getItem(STORE_KEY));
+  const local = IS_AG ? null : safeParse(localStorage.getItem(STORE_KEY));
   if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
     const merged = structuredClone(seed);
     merged.historie = local.historie || [];
@@ -632,9 +671,14 @@ async function init() {
   }
   db.historie ||= [];
   currentId = (db.rechnungen.find(r => r.id === settings.lastInvoice) || db.rechnungen[db.rechnungen.length - 1] || {}).id;
-  if (IS_AN) ui.edit = false;
+  if (READONLY) ui.edit = false;
   renderAll();
-  setState(local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
+  setState(IS_AG ? "Stand vom " + deDT(db.meta?.generiert_am || db.meta?.veroeffentlicht_am || "") : local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
+  if (IS_AG && db.rechnungen.length) {
+    banner(`<b>Ansicht für Bauherr und Architekt</b> (nur lesen). Sie sehen die geprüften Positionen mit Ampel und Prüfvermerk,
+      die Stellungnahmen der Fa. Wahl (grüne Spalte), Nachträge &amp; Klärungspunkte sowie die Kostenkontrolle.
+      Maßgeblich ist der unterschriebene Prüfvermerk (PDF).`, "ok");
+  }
   if (IS_AN && db.rechnungen.length) {
     banner(`<b>Guten Tag, Fa. Wahl.</b> Bitte nehmen Sie in der <b>grünen Spalte „Stellungnahme Elektriker“</b> zu den gelb und rot markierten
       Positionen Stellung (z. B. Raum/Montageort, Nachweise, Begründung). Die Prüfwerte sind schreibgeschützt. Ihre Eingaben werden automatisch
@@ -661,7 +705,7 @@ function saveLocal() {
 
 function touch() {
   dirty = true;
-  if (!IS_AN) db.meta.lokal_geaendert = true;
+  if (!READONLY) db.meta.lokal_geaendert = true;
   setState("Änderungen …", "dirty");
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveLocal, 400);
@@ -777,10 +821,10 @@ function renderAll() {
   $("#inv-select").innerHTML = db.rechnungen.map(r =>
     `<option value="${esc(r.id)}" ${r.id === currentId ? "selected" : ""}>${esc(r.bezeichnung)} · ${esc(r.rechnungsnummer)} vom ${deDate(r.datum)}</option>`).join("");
   $("#btn-edit").classList.toggle("on", ui.edit);
-  if (!db.rechnungen.length) { ["#meta", "#kpis", "#release", "#blocks", "#filters", "#pos-table", "#result"].forEach(s => $(s).innerHTML = ""); renderHistory(); return; }
+  if (!db.rechnungen.length) { ["#meta", "#kpis", "#release", "#kosten", "#blocks", "#filters", "#pos-table", "#result"].forEach(s => $(s).innerHTML = ""); renderHistory(); return; }
   const i = inv();
   $("#print-inv").textContent = `${i.bezeichnung} Nr. ${i.rechnungsnummer} vom ${deDate(i.datum)} – Prüfprotokoll`;
-  renderMeta(); renderKpis(); renderBlocks(); renderThemen(); renderFilters(); renderTable(); renderResult(); renderKorr(); renderHistory();
+  renderMeta(); renderKpis(); renderKosten(); renderBlocks(); renderThemen(); renderFilters(); renderTable(); renderResult(); renderKorr(); renderHistory();
 }
 
 function renderMeta() {
@@ -811,6 +855,7 @@ function renderMeta() {
         <option value="inkrementell" ${i.abrechnungsart !== "kumuliert" ? "selected" : ""}>inkrementell</option>
         <option value="kumuliert" ${i.abrechnungsart === "kumuliert" ? "selected" : ""}>kumuliert</option></select></div>`,
       `<div><span>Bisherige Zahlungen brutto</span><input data-meta="bisherige_zahlungen_brutto" data-num="1" inputmode="decimal" value="${fmt(i.bisherige_zahlungen_brutto || 0)}"></div>`,
+      `<div><span>Leistungsstand geschätzt %</span><input data-meta="leistungsstand_pct" data-num="1" inputmode="decimal" value="${i.leistungsstand_pct ? fmt(i.leistungsstand_pct, 0) : ""}" placeholder="z. B. 70" title="Geschätzter Fertigstellungsgrad der Gesamtleistung – für die Hochrechnung in der Kostenkontrolle"></div>`,
       kin("Abgebot %", "abgebot_pct"), kin("USt %", "mwst_pct"), kin("Skonto %", "skonto_pct"),
       ...[["netto", "Netto lt. Rechnung"], ["netto_nach_abgebot", "Netto n. Abgebot lt. Rg."], ["brutto", "Brutto lt. Rechnung"], ["zahlbetrag_skonto", "Zahlbetrag Skonto lt. Rg."]]
         .map(([key, l]) => `<div><span>${l}</span><input data-ang="${key}" inputmode="decimal" value="${ang[key] != null ? fmt(ang[key]) : ""}"></div>`),
@@ -866,6 +911,77 @@ function renderKpis() {
         (gezahlt ${deDate(z.datum)}${z.skonto_brutto ? `, inkl. Skonto ${eur(z.skonto_brutto)}` : ""})`).join("<br>")}</div>` : ""}`;
 }
 
+/* ---------- Kostenkontrolle (netto vor Abgebot, wie die Auftragssumme) ---------- */
+const KOSTEN_GELB = 3, KOSTEN_ROT = 10;
+const OHNE_PROGNOSE = /abgelehnt|nicht beauftragt|erledigt|zurückgezogen/i;
+
+/** Kumulierte Werte je OZ bis einschließlich Rechnung i (kumulierte Rechnungen ersetzen den Vorstand). */
+function kumuliert(i, pruef) {
+  let cum = {};
+  for (const r of db.rechnungen) {
+    if (r.abrechnungsart === "kumuliert") cum = {};
+    for (const p of r.positionen) cum[p.oz] = (cum[p.oz] || 0) + betrag(p, pruef);
+    if (r.id === i.id) break;
+  }
+  return cum;
+}
+
+function kostenStand(i) {
+  const auftrag = Number(db.lv?.angebotssumme_netto) || 0, lvm = lvMap();
+  const lvWert = oz => lvm[oz] ? r2((Number(lvm[oz].menge) || 0) * (Number(lvm[oz].ep) || 0)) : 0;
+  const cumG = kumuliert(i, false), cumP = kumuliert(i, true);
+  const sum = o => r2(Object.values(o).reduce((a, x) => a + x, 0));
+  const ueber = oz => Math.max(0, r2((cumP[oz] || 0) - lvWert(oz)));
+  const mehrPos = r2(Object.keys(cumP).reduce((a, oz) => a + ueber(oz), 0));
+  const themen = (db.themen || []).filter(t => !isHidden(t) && typeof t.prognose_netto === "number" && !OHNE_PROGNOSE.test(t.status || ""))
+    .map(t => {
+      const schon = r2((t.prognose_positionen || t.positionen || []).reduce((a, oz) => a + ueber(oz), 0));
+      return { t, wert: t.prognose_netto >= 0 ? Math.max(0, r2(t.prognose_netto - schon)) : t.prognose_netto, schon };
+    });
+  const mehrThemen = r2(themen.reduce((a, x) => a + x.wert, 0));
+  const offenOhne = (db.themen || []).filter(t => !isHidden(t) && t.offen && t.prognose_netto == null && /Nachtrag|Mehrung|Hinweis/i.test(t.typ || ""));
+  const prognose = r2(auftrag + mehrPos + mehrThemen);
+  const ls = Number(i.leistungsstand_pct) || 0;
+  const hoch = ls > 0 ? r2(sum(cumP) / (ls / 100)) : null;
+  const massgebend = Math.max(prognose, hoch || 0);
+  const abw = auftrag ? (massgebend / auftrag - 1) * 100 : 0;
+  const ampel = abw > KOSTEN_ROT ? "rot" : abw > KOSTEN_GELB ? "gelb" : "gruen";
+  return { auftrag, abgG: sum(cumG), abgP: sum(cumP), mehrPos, themen, mehrThemen, offenOhne, prognose, ls, hoch, abw, ampel };
+}
+
+function renderKosten() {
+  const i = inv(), k = kostenStand(i);
+  if (!k.auftrag) { $("#kosten").innerHTML = ""; return; }
+  const pct = x => fmt(x / k.auftrag * 100, 1) + " %";
+  const row = (l, v, p, cls = "") => `<div class="${cls}">${l}</div><div class="v ${cls}">${v}</div><div class="v ${cls}">${p}</div>`;
+  const label = { gruen: "im Rahmen", gelb: "Kostenrisiko", rot: "Überschreitung absehbar" }[k.ampel];
+  const scale = Math.max(k.prognose, k.hoch || 0, k.auftrag) * 1.05;
+  const pos = x => Math.min(100, x / scale * 100).toFixed(1) + "%";
+  $("#kosten").innerHTML = `
+    <h2>Kostenkontrolle – Auftragssumme und Prognose <span class="dot ${k.ampel}" style="margin-left:6px">${label}: ${k.abw >= 0 ? "+" : ""}${fmt(k.abw, 1)} %</span></h2>
+    <div class="k-grid">
+      ${row(`Auftragssumme (${esc(db.lv?.quelle || "LV")}, netto vor Abgebot)`, eur(k.auftrag), "100,0 %")}
+      ${row(`Abgerechnet bis ${esc(i.kurz)} (kumuliert) – gefordert`, eur(k.abgG), pct(k.abgG))}
+      ${row(`Abgerechnet bis ${esc(i.kurz)} (kumuliert) – geprüft`, eur(k.abgP), pct(k.abgP))}
+      ${row("Feststehende Mehrungen: Mengen über LV + Positionen ohne LV (geprüft)", signed(k.mehrPos), pct(k.mehrPos))}
+      ${row("Bekannte Nachträge / erwartete Mehrungen aus „Nachträge &amp; Klärungspunkte“", signed(k.mehrThemen), pct(k.mehrThemen))}
+      ${row("Prognose Schlussrechnung (netto vor Abgebot)", eur(k.prognose), pct(k.prognose), "sum")}
+      ${k.hoch != null ? row(`Hochrechnung über Leistungsstand (${fmt(k.ls, 0)} % fertig)`, eur(k.hoch), pct(k.hoch)) : ""}
+    </div>
+    <div class="bar"><div class="fill" style="width:${pos(k.abgP)}"></div>
+      <div class="mark auftrag" style="left:${pos(k.auftrag)}" title="Auftragssumme"></div>
+      <div class="mark prog" style="left:${pos(Math.max(k.prognose, k.hoch || 0))}" title="Prognose"></div></div>
+    <div class="k-legend"><span>■ abgerechnet (geprüft)</span><span>▮ schwarz = Auftragssumme</span><span>▮ rot = Prognose</span>
+      <span>Ampel: bis +${KOSTEN_GELB} % grün, bis +${KOSTEN_ROT} % gelb, darüber rot</span></div>
+    <details><summary>Details zur Prognose${k.offenOhne.length ? ` · <b>${k.offenOhne.length} offene Themen noch ohne Betrag</b>` : ""}</summary>
+      <table>${k.themen.map(x => `<tr><td>${esc(x.t.id)} ${esc(x.t.titel)} <span style="color:var(--muted)">(${esc(x.t.status || "")})</span>${x.schon ? ` – bereits ${eur(x.schon)} abgerechnet` : ""}</td><td class="v">${signed(x.wert)}</td></tr>`).join("")}
+        ${k.offenOhne.map(t => `<tr><td>${esc(t.id)} ${esc(t.titel)} <span style="color:var(--muted)">(${esc(t.status || "")})</span></td><td class="v">noch nicht beziffert</td></tr>`).join("")}</table>
+      <p style="color:var(--muted);margin:6px 0 0">Noch nicht abgerechnete LV-Positionen sind mit ihrer LV-Menge angesetzt; Minderungen werden erst bei
+      Abrechnung wirksam. Erwartete Mehrungen eines Themas werden mit bereits abgerechneten Mehrmengen seiner Positionen verrechnet.
+      ${READONLY ? "" : "Leistungsstand für die Hochrechnung unter „✎ Rechnungsdaten bearbeiten“ eintragen; die Auswirkung je Thema im Themen-Dialog (💬)."}</p>
+    </details>`;
+}
+
 function countStatus(list) {
   const c = { gruen: 0, gelb: 0, rot: 0, "": 0 };
   list.forEach(p => c[p.status in c ? p.status : ""]++);
@@ -895,7 +1011,7 @@ function renderFilters() {
     `<span style="font-size:12px;color:var(--wahl-head);font-weight:700">Stellungnahmen: ${rf.length - rfOpen} / ${rf.length} Rückfragen beantwortet</span>` +
     `<select id="f-block"><option value="alle">Alle Blöcke</option>${blocksOf(i).map(b => `<option value="${b.id}" ${ui.block === b.id ? "selected" : ""}>${esc(b.titel)}</option>`).join("")}</select>
      <input type="search" id="f-search" placeholder="Suche OZ, Text, Vermerk, Stellungnahme …" value="${esc(ui.search)}">
-     <span class="spacer"></span><span style="color:var(--muted);font-size:12px">${IS_AN
+     <span class="spacer"></span><span style="color:var(--muted);font-size:12px">${IS_AG ? "Nur-Lese-Ansicht" : IS_AN
        ? "Nur die grüne Spalte ist editierbar – Eingaben werden automatisch gespeichert"
        : "Prüf-Menge / Prüf-EP / Ampel / Vermerke direkt in der Tabelle bearbeiten · Enter = nächste Zeile"}</span>`;
   const chipEl = $(`#filters .chip[data-status="rueckfrage"]`); if (chipEl) chipEl.classList.add("open");
@@ -945,10 +1061,10 @@ function rowHtml(i, p, n, lvm, prior) {
   const lv = lvm[p.oz] || {};
   const tag = lv.typ === "Nachtrag" || p.lv_menge == null ? `<span class="tag nt">NT</span>` : lv.typ === "Bedarf" ? `<span class="tag bed">Bedarf</span>` : "";
   const st = p.status || "";
-  const lock = IS_AN ? ` readonly tabindex="-1" title="schreibgeschützt (Prüfwert JWGI)"` : "";
+  const lock = READONLY ? ` readonly tabindex="-1" title="schreibgeschützt"` : "";
   const numIn = (f, d = 2) => `<input class="n" data-i="${n}" data-f="${f}" inputmode="decimal" value="${fmt(p[f], d)}"${lock}>`;
   const ta = (f, ph, ro) => `<textarea data-i="${n}" data-f="${f}" rows="1" placeholder="${ro ? "" : ph}"${ro ? lock : ""}>${esc(p[f] || "")}</textarea><div class="print-only">${esc(p[f] || "")}</div>`;
-  const dis = IS_AN ? " disabled" : "";
+  const dis = READONLY ? " disabled" : "";
   const epWarn = lv.typ && lv.typ !== "Nachtrag" && r2(p.pruef_ep) !== r2(lv.ep) ? ` <span class="warn-ic" title="Prüf-EP weicht vom LV-EP ${fmt(lv.ep)} € ab">≠LV</span>` : "";
   const rfWarn = p.betrag_rechnung != null && r2(p.betrag_rechnung) !== betrag(p, false) ? ` <span class="warn-ic" title="lt. Rechnung ${eur(p.betrag_rechnung)} – Rechenfehler">!</span>` : "";
   return `<tr class="st-${st || "offen"}" data-i="${n}">
@@ -968,9 +1084,9 @@ function rowHtml(i, p, n, lvm, prior) {
       ${["gruen", "gelb", "rot", ""].map(s => `<option value="${s}" ${s === st ? "selected" : ""}>${AMPEL[s]}</option>`).join("")}</select></td>
     <td class="c"><select class="kat" data-i="${n}" data-f="kategorie"${dis}>
       ${["", "A", "B", "C"].map(s => `<option value="${s}" ${s === (p.kategorie || "") ? "selected" : ""}>${s || "–"}</option>`).join("")}</select></td>
-    <td class="kom">${ta("kommentar", "Prüfvermerk …", IS_AN)}${IS_AN ? "" :
+    <td class="kom">${ta("kommentar", "Prüfvermerk …", READONLY)}${READONLY ? "" :
       `<input class="hint no-print" data-i="${n}" data-f="pdf_hinweis" value="${esc(p.pdf_hinweis || "")}" placeholder="PDF-Stempel-Kurzhinweis (leer = automatisch)" title="Kurzhinweis im gestempelten Rechnungs-PDF. Platzhalter: {mehrmenge} {pruef_ep} {pruef_betrag} {diff}">`}</td>
-    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …")}</td>
+    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …", IS_AG)}</td>
     ${ui.edit ? `<td class="c"><button class="del" data-act="del" data-i="${n}" title="Position löschen">🗑</button></td>` : ""}
   </tr>`;
 }
@@ -1022,7 +1138,8 @@ function renderResult() {
 }
 
 /* ---------- Positionsakten, Themen, Korrespondenz ---------- */
-const visibleEntries = list => (list || []).filter(x => !(IS_AN && x.intern)).sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
+const isHidden = x => (READONLY && x.intern) || (IS_AN && x.nur_ag);
+const visibleEntries = list => (list || []).filter(x => !isHidden(x)).sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
 const themenFor = oz => (db.themen || []).filter(t => (t.positionen || []).includes(oz));
 function akteBadge(oz) {
   const a = (db.akte || {})[oz], th = themenFor(oz);
@@ -1035,7 +1152,7 @@ const deDT = s => { if (!s) return "–"; const [d, t] = String(s).split("T"); r
 function quelleHtml(q) {
   const k = (db.korrespondenz || []).find(x => x.id === q);
   if (!k) return q ? esc(q) : "";
-  const link = !IS_AN && location.protocol === "file:" ? ` <a href="${encodeURI(k.datei.replace(/\\/g, "/"))}" title="Mail öffnen">öffnen</a>` : "";
+  const link = !READONLY && location.protocol === "file:" ? ` <a href="${encodeURI(k.datei.replace(/\\/g, "/"))}" title="Mail öffnen">öffnen</a>` : "";
   return `${esc(k.id)} „${esc(k.betreff.slice(0, 70))}“${link}`;
 }
 function timelineHtml(entries) {
@@ -1043,7 +1160,7 @@ function timelineHtml(entries) {
   if (!list.length) return `<div class="small" style="color:var(--muted)">Noch keine Einträge.</div>`;
   return `<div class="timeline">${list.map(x => `<div class="tl ${esc(x.rolle)} ${x.intern ? "intern" : ""}">
     <div class="meta"><b>${deDT(x.datum)}</b><span class="pill ${esc(x.rolle)}">${esc(x.von || x.rolle)}</span><span class="pill">${esc(x.art)}</span>
-      ${x.intern ? `<span class="pill offen">intern</span>` : ""}<span>${quelleHtml(x.quelle)}</span></div>
+      ${x.intern ? `<span class="pill offen">intern</span>` : ""}${x.nur_ag && !IS_AG ? `<span class="pill">nur Bauherr/Architekt</span>` : ""}<span>${quelleHtml(x.quelle)}</span></div>
     <div class="txt">${esc(x.text)}</div></div>`).join("")}</div>`;
 }
 let akteCtx = null;
@@ -1062,10 +1179,13 @@ function openAkte(kind, key) {
   }
   akteCtx = { kind, key };
   $("#akte-title").textContent = title;
-  const standHtml = IS_AN ? "" : `<div class="stand">${offen ? `<span class="pill offen">offen</span> ` : `<span class="pill ok">geklärt</span> `}${esc(stand || "Kein Stand erfasst.")}</div>`;
+  const standHtml = READONLY ? "" : `<div class="stand">${offen ? `<span class="pill offen">offen</span> ` : `<span class="pill ok">geklärt</span> `}${esc(stand || "Kein Stand erfasst.")}</div>`;
   $("#akte-body").innerHTML = `${standHtml}${extra}
     <h2 style="margin:14px 0 8px">Verlauf</h2>${timelineHtml(entries)}`;
   f.stand.value = stand || ""; f.offen.checked = !!offen;
+  const th = kind === "thema" ? (db.themen || []).find(x => x.id === key) : null;
+  $("#akte-prognose").classList.toggle("hidden", !th);
+  f.prognose.value = th?.prognose_netto != null ? fmt(th.prognose_netto) : "";
   $("#dlg-akte").returnValue = "";
   $("#dlg-akte").showModal();
 }
@@ -1074,7 +1194,7 @@ $("#dlg-akte").addEventListener("click", e => {
   e.preventDefault(); $("#dlg-akte").close(); openAkte("thema", a.dataset.thema);
 });
 $("#dlg-akte").addEventListener("close", () => {
-  if ($("#dlg-akte").returnValue !== "save" || IS_AN || !akteCtx) return;
+  if ($("#dlg-akte").returnValue !== "save" || READONLY || !akteCtx) return;
   const f = $("#form-akte"), { kind, key } = akteCtx;
   let target;
   if (kind === "pos") { db.akte ||= {}; target = db.akte[key] ||= { stand: "", offen: false, eintraege: [] }; }
@@ -1084,16 +1204,24 @@ $("#dlg-akte").addEventListener("close", () => {
   if (f.text.value.trim()) {
     const rolle = f.rolle.value;
     target.eintraege.push({ datum: nowIso().slice(0, 16), von: rolle === "JWGI" ? (settings.user || "JWGI") : f.rolle.selectedOptions[0].text,
-      rolle, art: f.art.value, text: f.text.value.trim(), quelle: "Dashboard", intern: f.intern.checked });
+      rolle, art: f.art.value, text: f.text.value.trim(), quelle: "Dashboard", intern: f.intern.checked,
+      ...(f.nur_ag.checked && !f.intern.checked ? { nur_ag: true } : {}) });
   }
   if (target.stand !== f.stand.value || !!target.offen !== f.offen.checked) logChange(kind === "pos" ? key : "", "Stand " + key, target.stand, f.stand.value);
   target.stand = f.stand.value; target.offen = f.offen.checked;
+  if (kind === "thema") {
+    const v = f.prognose.value.trim() === "" ? null : parseNum(f.prognose.value);
+    if (!Number.isNaN(v) && v !== (target.prognose_netto ?? null)) {
+      logChange("", "Prognose " + key, target.prognose_netto ?? "", v ?? "");
+      if (v == null) delete target.prognose_netto; else target.prognose_netto = r2(v);
+    }
+  }
   touch(); renderAll();
   setTimeout(() => openAkte(kind, key), 0);
 });
 
 function renderThemen() {
-  const list = (db.themen || []).filter(t => !(IS_AN && t.intern));
+  const list = (db.themen || []).filter(t => !isHidden(t));
   if (!list.length) { $("#themen").innerHTML = ""; $("#themen").classList.add("hidden"); return; }
   $("#themen").classList.remove("hidden");
   const offen = list.filter(t => t.offen).length;
@@ -1138,7 +1266,7 @@ const table = $("#pos-table");
 table.addEventListener("focusin", e => { const el = e.target; if (el.dataset.f) el.dataset.old = inv().positionen[+el.dataset.i]?.[el.dataset.f] ?? ""; });
 table.addEventListener("input", e => {
   const el = e.target, f = el.dataset.f; if (!f || el.tagName === "SELECT") return;
-  if (IS_AN && f !== "stellungnahme_an") return;
+  if (IS_AG || (IS_AN && f !== "stellungnahme_an")) return;
   const p = inv().positionen[+el.dataset.i];
   if (!("old" in el.dataset)) el.dataset.old = p[f] ?? "";
   if (NUM_FIELDS.has(f)) {
@@ -1155,7 +1283,7 @@ table.addEventListener("input", e => {
 });
 table.addEventListener("change", e => {
   const el = e.target, f = el.dataset.f; if (!f) return;
-  if (IS_AN && f !== "stellungnahme_an") return;
+  if (IS_AG || (IS_AN && f !== "stellungnahme_an")) return;
   const p = inv().positionen[+el.dataset.i];
   if (el.tagName === "SELECT" && !("old" in el.dataset)) el.dataset.old = p[f] ?? "";
   if (el.tagName === "SELECT") {
@@ -1194,7 +1322,7 @@ $("#filters").addEventListener("click", e => { const c = e.target.closest("[data
 $("#filters").addEventListener("change", e => { if (e.target.id === "f-block") { ui.block = e.target.value; renderTable(); } });
 $("#filters").addEventListener("input", e => { if (e.target.id === "f-search") { ui.search = e.target.value; renderTable(); } });
 $("#meta").addEventListener("change", e => {
-  if (IS_AN) return;
+  if (READONLY) return;
   const el = e.target, i = inv();
   if (el.dataset.meta) {
     const key = el.dataset.meta, old = i[key];
@@ -1374,13 +1502,15 @@ $("#btn-send").onclick = async () => {
 };
 $("#dlg-sent").addEventListener("close", () => { if ($("#dlg-sent").returnValue === "mail" && lastMailto) location.href = lastMailto; });
 
-$("#btn-link").onclick = async () => {
+async function copyRoleLink(role, pwFile) {
   const base = db.meta?.pages_url || (location.protocol.startsWith("http") ? location.origin + location.pathname : "");
   if (!base) return toast("Noch keine Online-Adresse vorhanden – bitte zuerst Aktualisieren.bat im Projektordner ausführen.", "err");
-  const url = base.split(/[?#]/)[0] + "?role=elektriker";
+  const url = base.split(/[?#]/)[0] + "?role=" + role;
   const ok = await copyText(url);
-  toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort bitte separat (Telefon/SMS) mitteilen.`, "ok");
-};
+  toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort (${pwFile} im Projektordner) bitte separat mitteilen.`, "ok");
+}
+$("#btn-link").onclick = () => copyRoleLink("elektriker", ".pages_passwort.txt");
+$("#btn-link-ag").onclick = () => copyRoleLink("auftraggeber", ".pages_passwort_ag.txt");
 
 /* ---------- Dialog: neue Rechnung ---------- */
 $("#btn-new-inv").onclick = () => {
