@@ -314,6 +314,7 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
     <button class="btn pruefer-only" id="btn-new-inv">＋ Neue Rechnung (2. TR / SR)</button>
     <button class="btn pruefer-only" id="btn-link" title="Link für Fa. Wahl (Elektriker-Ansicht) kopieren">🔗 Link für Elektriker</button>
     <button class="btn pruefer-only" id="btn-link-ag" title="Link für Bauherr und Architekt (Nur-Lese-Ansicht, eigenes Passwort) kopieren">🔗 Link Bauherr/Architekt</button>
+    <button class="btn pruefer-only" id="btn-protokoll" title="Wer hat die Online-Ansichten wann geöffnet?">👁 Zugriffsprotokoll</button>
     <span class="spacer"></span>
     <button class="btn pruefer-only" id="btn-export" title="Komplette Datenbank als audit_data.json herunterladen">⤓ JSON exportieren</button>
     <button class="btn pruefer-only" id="btn-import" title="audit_data.json oder Antwortdatei der Fa. Wahl einlesen">⤒ JSON / Antwort importieren</button>
@@ -468,7 +469,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
 <dialog id="dlg-pw">
   <form method="dialog" id="form-pw">
     <h3>Geschützter Prüfstand</h3>
-    <div class="note">Die Prüfdaten sind verschlüsselt. Bitte das Passwort eingeben, das Sie von JAEGER Wohn- &amp; Gebäudeintelligenz erhalten haben.</div>
+    <div class="note">Die Prüfdaten sind verschlüsselt. Bitte das Passwort eingeben, das Sie von JAEGER Wohn- &amp; Gebäudeintelligenz erhalten haben.
+      <br><small>Das Öffnen wird zur Dokumentation mit Datum, Uhrzeit und Ansicht protokolliert (keine IP-Adresse, keine Cookies).</small></div>
     <label>Passwort<input name="pw" type="password" autocomplete="current-password" required autofocus></label>
     <div class="note hidden" id="pw-err" style="color:var(--r);background:var(--r-bg)">Passwort falsch – bitte erneut versuchen.</div>
     <div class="actions"><button class="btn primary" value="ok">Öffnen</button></div>
@@ -483,8 +485,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261015222358" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261015222358" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261016173836" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261016173836" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -695,6 +697,7 @@ async function init() {
   if (READONLY) ui.edit = false;
   renderAll();
   setState(IS_AG ? "Stand vom " + deDT(db.meta?.generiert_am || db.meta?.veroeffentlicht_am || "") : local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
+  logZugriff();
   if (IS_AG && db.rechnungen.length) {
     banner(`<b>Ansicht für Bauherr und Architekt</b> (nur lesen). Sie sehen die geprüften Positionen mit Ampel und Prüfvermerk,
       die Stellungnahmen der Fa. Wahl (grüne Spalte), die Kosten auf einen Blick sowie Nachträge &amp; Klärungspunkte.
@@ -1606,6 +1609,30 @@ async function copyRoleLink(role, pwFile) {
   const ok = await copyText(url);
   toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort (${pwFile} im Projektordner) bitte separat mitteilen.`, "ok");
 }
+$("#btn-protokoll").onclick = () => {
+  const url = window.AUDIT_SEED?.meta?.protokoll_url || db.meta?.protokoll_url;
+  if (url) window.open(url, "_blank", "noopener");
+  else toast("Noch kein Zugriffsprotokoll – bitte zuerst Aktualisieren.bat im Projektordner ausführen.", "err");
+};
+
+/** Ein Protokolleintrag je Browser und Tag (nur online, nur nach erfolgreichem Entschlüsseln). */
+async function logZugriff() {
+  const up = db.meta?.upload, nr = db.meta?.protokoll_issue;
+  if (!PUBLIC_SITE || !up?.token || !nr) return;
+  const key = `${STORE_KEY}.zugriff.${todayIso()}`;
+  if (localStorage.getItem(key)) return;
+  const wann = new Date().toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" });
+  const wer = IS_AG ? "Ansicht Bauherr/Architekt" : "Ansicht Fa. Wahl";
+  try {
+    const r = await fetch(`https://api.github.com/repos/${up.repo}/issues/${nr}/comments`, {
+      method: "POST",
+      headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${up.token}`, "X-GitHub-Api-Version": "2022-11-28" },
+      body: JSON.stringify({ body: `${wann} – ${db.projekt?.kurz || ""} – ${wer} geöffnet` }),
+    });
+    if (r.ok) localStorage.setItem(key, "1");
+  } catch { /* Protokoll ist optional */ }
+}
+
 $("#btn-link").onclick = () => copyRoleLink("elektriker", ".pages_passwort.txt");
 $("#btn-link-ag").onclick = () => copyRoleLink("auftraggeber", ".pages_passwort_ag.txt");
 
