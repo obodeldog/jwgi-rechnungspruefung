@@ -35,7 +35,20 @@
   .save-state.dirty { background: #f9ab00; color: #1d2433; }
   .save-state.err { background: #d93025; }
 
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 0 6px; align-items: center; }
+  .toolbar { display: flex; gap: 10px 12px; flex-wrap: wrap; padding: 14px 0 6px; align-items: flex-start; }
+  .tool { display: flex; flex-direction: column; gap: 4px; width: 148px; }
+  .tool .btn { white-space: normal; min-height: 36px; justify-content: center; text-align: center; line-height: 1.25; }
+  .tool small { color: var(--muted); font-size: 11px; line-height: 1.3; }
+  .anleitung { margin: 4px 0 14px; }
+  .anleitung summary { cursor: pointer; font-weight: 700; color: var(--navy); padding: 12px 16px; }
+  .anleitung .body { padding: 0 16px 14px; font-size: 13px; }
+  .anleitung h3 { margin: 14px 0 4px; font-size: 13px; color: var(--navy); }
+  .anleitung ol { margin: 4px 0 0; padding-left: 18px; }
+  .anleitung li { margin: 0 0 8px; }
+  .anleitung p { margin: 6px 0; }
+  .anleitung details { border-top: 1px solid #e3e8f0; }
+  .anleitung details > summary { padding: 9px 0; font-size: 13px; }
+  .anleitung ul { margin: 4px 0 8px; padding-left: 18px; }
   .btn { border: 1px solid var(--line); background: var(--card); padding: 7px 12px; border-radius: 7px; cursor: pointer;
     box-shadow: var(--shadow); display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
   .btn:hover { border-color: var(--navy-2); color: var(--navy-2); }
@@ -49,6 +62,23 @@
     display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .banner.err { background: var(--r-bg); border-color: #f4b4ae; }
   .banner.ok { background: var(--g-bg); border-color: #a8dab5; }
+
+  .honorar { padding: 14px 18px; }
+  .honorar h2 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .honorar h2 small { color: var(--muted); font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .honorar .k-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin: 8px 0 12px; }
+  .honorar .k-tile { background: #f7f9fc; border-radius: 8px; padding: 8px 10px; }
+  .honorar .k-tile span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .honorar .k-tile b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .honorar .k-tile.warn { background: var(--y-bg); }
+  .honorar .k-tile.gruen { background: var(--g-bg); }
+  .honorar table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .honorar th, .honorar td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .honorar th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .honorar td.num, .honorar th.num { text-align: right; white-space: nowrap; }
+  .honorar tr.offen td { background: #fffaf0; }
+  .honorar .sub { color: var(--muted); font-size: 12px; margin: 2px 0 0; }
+  .honorar label.haken { display: flex; gap: 6px; align-items: flex-start; margin: 2px 0; }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
   section { margin-top: 14px; }
@@ -94,6 +124,8 @@
   .chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
   .chip.gruen.active { background: var(--g); border-color: var(--g); } .chip.gelb.active { background: #e37400; border-color: #e37400; }
   .chip.rot.active { background: var(--r); border-color: var(--r); }
+  .chip.beantwortet { border-color: var(--wahl-head); color: var(--wahl-head); }
+  .chip.beantwortet.active { background: var(--wahl-head); color: #fff; }
   .filters input[type=search], .filters select { border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; background: #fff; }
   .filters input[type=search] { min-width: 260px; }
 
@@ -109,6 +141,7 @@
   table.pos tbody tr { background: #fff; }
   table.pos tbody tr:hover { background: #fafcff; }
   td.num { text-align: right; white-space: nowrap; }
+  td.num .ers { white-space: normal; display: block; line-height: 1.25; }
   td.c { text-align: center; }
   td.oz { font-weight: 650; white-space: nowrap; border-left: 4px solid transparent; }
   tr.st-gruen td.oz { border-left-color: var(--g); } tr.st-gelb td.oz { border-left-color: #f9ab00; }
@@ -238,6 +271,26 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   .stand { background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; }
   #dlg-akte { width: min(860px, 96vw); }
   .korr-list td a { color: var(--navy-2); }
+  .korr-list tr.zuordnen td { background: #fff8e6; }
+  .korr-list select.bauwerk { font: inherit; font-size: 12px; }
+  #dlg-akte.mit-angebot { width: min(1180px, 97vw); }
+  .ang { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+  .ang th { text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 6px; border-bottom: 1px solid var(--line); }
+  .ang td { padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .ang td.num { text-align: right; white-space: nowrap; }
+  .ang td.oz { border-left: 4px solid #b8c0cc; font-weight: 700; white-space: nowrap; }
+  .ang tr.alt td { color: var(--muted); }
+  .ang .ers, td .ers { color: #8a4b00; margin-top: 3px; }
+  tr.lv-offen td { color: #b7bdc7; background: #f7f8fa; }
+  tr.lv-offen td.oz { border-left-color: #eceff3; font-weight: 500; }
+  tr.lv-offen .ers { color: #8a4b00; }
+  tr.lv-offen:hover td { background: #f1f3f6; color: #8b93a0; }
+  .ang textarea { width: 100%; min-width: 220px; font: inherit; font-size: 12.5px; }
+  .ang-sum { margin: 8px 0 4px; font-size: 13px; line-height: 1.6; }
+  .ang input.hint { width: 100%; margin-top: 3px; font-size: 11.5px; }
+  .ang-pdf { display: flex; gap: 10px; align-items: center; margin: 10px 0 2px; }
+  .ang-pdf small { color: var(--muted); font-size: 11.5px; max-width: 640px; }
+  .ang-hinweis { background: #f4f7fb; border: 1px solid #d5ddea; border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-size: 12.5px; }
 
   @media (max-width: 1100px) {
     .kpi-layout, .result { grid-template-columns: 1fr; }
@@ -309,22 +362,101 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
 
 <main class="wrap">
   <div class="toolbar no-print">
-    <button class="btn pruefer-only" id="btn-edit" title="Rechnungskopf, geforderte Mengen/EPs und Positionen bearbeiten">✎ Rechnungsdaten bearbeiten</button>
-    <button class="btn pruefer-only" id="btn-add-pos">＋ Position</button>
-    <button class="btn pruefer-only" id="btn-new-inv">＋ Neue Rechnung (2. TR / SR)</button>
-    <button class="btn pruefer-only" id="btn-link" title="Link für Fa. Wahl (Elektriker-Ansicht) kopieren">🔗 Link für Elektriker</button>
-    <button class="btn pruefer-only" id="btn-link-ag" title="Link für Bauherr und Architekt (Nur-Lese-Ansicht, eigenes Passwort) kopieren">🔗 Link Bauherr/Architekt</button>
-    <button class="btn pruefer-only" id="btn-protokoll" title="Wer hat die Online-Ansichten wann geöffnet?">👁 Zugriffsprotokoll</button>
-    <span class="spacer"></span>
-    <button class="btn pruefer-only" id="btn-export" title="Komplette Datenbank als audit_data.json herunterladen">⤓ JSON exportieren</button>
-    <button class="btn pruefer-only" id="btn-import" title="audit_data.json oder Antwortdatei der Fa. Wahl einlesen">⤒ JSON / Antwort importieren</button>
-    <button class="btn" id="btn-csv">⤓ CSV (Excel)</button>
-    <button class="btn pruefer-only" id="btn-sync" title="Speicherort: Browser, REST-Backend oder GitHub">⚙ Speicherort / Sync</button>
-    <button class="btn danger pruefer-only" id="btn-reset" title="Lokale Änderungen verwerfen und audit_data.js neu laden">↺ Ausgangsdaten</button>
-    <button class="btn primary" id="btn-print">⎙ Drucken / PDF</button>
+    <div class="tool pruefer-only"><button class="btn send" id="btn-holen">Stellungnahmen holen</button><small>Neue Antworten der Fa. Wahl in die grüne Spalte. Das passiert sonst von selbst.</small></div>
+    <div class="tool pruefer-only"><button class="btn primary" id="btn-fertig">Excel und Prüf-PDF</button><small>Ersetzt die Excel-Datei und die gestempelte Rechnung im Ordner. Kein Testlauf.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-test">Testlauf</button><small>Probedatei zum Ansehen. Die echte Rechnung und die Online-Seite bleiben unverändert.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-mails">E-Mails holen</button><small>Holt neue Projekt-Mails in die Korrespondenz von Altbau und Neubau. Nur wenn Sie klicken.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-edit">✎ Rechnungsdaten bearbeiten</button><small>Kopf der Rechnung: Datum, Nummer, Skonto, Abgebot.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-add-pos">＋ Position</button><small>Eine fehlende Position in dieser Rechnung ergänzen.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-new-inv">＋ Neue Rechnung</button><small>Nächste Teilrechnung oder die Schlussrechnung anlegen.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-link">🔗 Link für Elektriker</button><small>Kopiert den Online-Link für die Fa. Wahl.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-link-ag">🔗 Link Bauherr/Architekt</button><small>Kopiert den Nur-Lese-Link. Eigenes Passwort.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-protokoll">👁 Zugriffsprotokoll</button><small>Wer die Online-Seite wann geöffnet hat.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-export">⤓ JSON exportieren</button><small>Nur eine Sicherungskopie. Excel und die PDF entstehen über den Knopf „Excel und Prüf-PDF“.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-import">⤒ JSON importieren</button><small>Eine zuvor exportierte Datei wieder einlesen.</small></div>
+    <div class="tool"><button class="btn" id="btn-csv">⤓ CSV</button><small class="pruefer-only">Tabelle zum Öffnen in Excel. Das ist nicht die Prüfdatei.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-sync">⚙ Speicherort</button><small>Technische Einstellung. Auf „Browser“ lassen.</small></div>
+    <div class="tool pruefer-only"><button class="btn danger" id="btn-reset">↺ Ausgangsdaten</button><small>Verwirft Änderungen, die noch nicht exportiert sind.</small></div>
+    <div class="tool"><button class="btn primary" id="btn-print">⎙ Drucken</button><small class="pruefer-only">Druckt diese Ansicht. Die gestempelte Originalrechnung entsteht damit nicht.</small></div>
     <input type="file" id="file-import" accept=".json,application/json" class="hidden">
   </div>
+  <details class="card anleitung no-print pruefer-only" open>
+    <summary>So gehen Sie vor</summary>
+    <div class="body">
+      <details open>
+        <summary>1. Eine neue E-Mail ist da</summary>
+        <ol>
+          <li>Oben auf <b>E-Mails holen</b> klicken. Die Mail steht danach ganz unten in der <b>Korrespondenz</b>, in Altbau und in Neubau, mit allen Anhängen. Ein Klick auf die Mail (Endung .eml) zeigt sie lesbar in einem neuen Tab, ein Klick auf eine PDF öffnet die PDF.</li>
+          <li>Entscheiden, was es ist:
+            <ul>
+              <li><b>Neue Rechnung</b> (Teil- oder Schlussrechnung): weiter mit Abschnitt 2.</li>
+              <li><b>Nachtragsangebot</b>: weiter mit Abschnitt 4.</li>
+              <li><b>Stundenlohnzettel, Aufmaß, Nachweise</b> zu einer Rechnung: bleiben in der Korrespondenz. Bei der Prüfung der Rechnung darauf zugreifen.</li>
+              <li><b>Alles andere</b>: nur zur Kenntnis. Die Mail bleibt in der Korrespondenz, es ändert sich nichts an der Prüfung.</li>
+            </ul>
+          </li>
+          <li>Eine Stellungnahme, die die Fa. Wahl online abgibt, ist keine E-Mail. Sie kommt von selbst in die grüne Spalte. Sie bekommen dazu eine Benachrichtigung per Mail. Weiter mit Abschnitt 3.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>2. Neue Rechnung prüfen</summary>
+        <ol>
+          <li><b>Rechnung einlesen.</b> In Cursor schreiben: „Neue Rechnung Altbau einlesen“ (bzw. Neubau). Das Programm liest aus der PDF alle Positionen, Summen, Abgebot, Skonto und die bisherigen Abschläge und legt die Rechnung neu an. Die Original-PDF wird dabei mit der Rechnung verknüpft, damit sie später gestempelt werden kann.
+            <br>Der Knopf <b>＋ Neue Rechnung</b> ist nur für den Fall, dass keine PDF vorliegt. Dann müssen alle Positionen von Hand eingetragen werden, und einen Stempel auf der Originalrechnung gibt es nicht.</li>
+          <li>Dashboard mit <b>Strg+F5</b> neu laden. Es erscheint „Neu dazugekommen: …“. Oben links im Feld <b>Rechnung</b> die neue Rechnung auswählen.</li>
+          <li>Rechts im Kasten <b>Zur Abschlagszahlung freigegeben</b> die Haken ansehen: Summen nachgerechnet, Menge × EP, EP gleich Vertrag, Skontofrist. Ein rotes oder gelbes Ausrufezeichen zeigt, wo etwas nicht stimmt.</li>
+          <li>Jede Zeile prüfen. Am Anfang ist die Prüfmenge gleich der Rechnungsmenge, die Ampel steht auf offen.
+            <ul>
+              <li>Menge gegen Aufmaß und Nachweise prüfen, bei Abweichung die Prüfmenge ändern.</li>
+              <li>„≠LV“ heißt: der Einheitspreis weicht vom Vertrag ab.</li>
+              <li>„NT“ heißt: Position ohne LV-Grundlage, also ein Nachtrag. Nur freigeben, wenn ein beauftragtes Angebot vorliegt (Abschnitt 4).</li>
+              <li>Ampel setzen: <b>Grün</b> in Ordnung, <b>Gelb</b> vorläufig mitzahlen und offen lassen, <b>Rot</b> kürzen. Den Grund in die Spalte <b>Prüfvermerk</b> schreiben. Die Fa. Wahl sieht ihn online. In der gestempelten PDF steht ein Kurzhinweis, den das Programm selbst bildet. Im kleinen Feld darunter können Sie ihn durch einen eigenen ersetzen.</li>
+            </ul>
+          </li>
+          <li><b>Testlauf</b> klicken und die Probe-PDF ansehen. Das ersetzt nichts.</li>
+          <li>Wenn alles stimmt: <b>Excel und Prüf-PDF</b>. Die Excel-Datei und die gestempelte Rechnung liegen danach im Projektordner. Die Online-Seite zeigt der Fa. Wahl und dem Bauherrn den neuen Stand. Links und Passwörter bleiben gleich.</li>
+          <li>Die gestempelte PDF an Bauherr und Architekt schicken. Die Fa. Wahl kann online zu jeder Zeile Stellung nehmen.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>3. Die Fa. Wahl hat eine Stellungnahme abgegeben</summary>
+        <ol>
+          <li>Über der Tabelle auf <b>mit Stellungnahme</b> klicken. Dann sehen Sie nur die Zeilen, in denen rechts ein Text steht.</li>
+          <li>Jede Zeile einzeln lesen und die Ampel setzen. Einen Knopf „Rechnung freigeben“ gibt es dafür nicht. Die Freigabe ist die Summe Ihrer Ampeln.
+            <br>Antwort reicht: Ampel auf <b>Grün</b>.
+            <br>Betrag soll vorläufig mitgezahlt werden, die Sache bleibt offen: <b>Gelb</b> lassen.
+            <br>Betrag kürzen: <b>Rot</b> lassen und in den Prüfvermerk schreiben, was fehlt.</li>
+          <li>Rechts im Kasten <b>Zur Abschlagszahlung freigegeben</b> steht danach der Betrag, den Sie dem Bauherrn zur Zahlung empfehlen.</li>
+          <li>Wenn die Ampeln stimmen: erst <b>Testlauf</b>, dann <b>Excel und Prüf-PDF</b>. Der echte Knopf ersetzt die Excel-Datei und die gestempelte PDF <i>dieser</i> Rechnung, öffnet die PDF und aktualisiert die Online-Seite.</li>
+          <li>Diese PDF schicken Sie an Bauherr und Architekt.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>4. Nachtragsangebot</summary>
+        <ol>
+          <li>In Cursor schreiben: „Nachtragsangebot A10… eintragen“. Es kommt als neuer Punkt mit der nächsten freien Nummer (z. B. T12) unter <b>Nachträge &amp; Klärungspunkte</b>. Die vorhandenen Punkte bleiben, wie sie sind.</li>
+          <li>Auf den Punkt klicken. In der Akte steht die <b>Angebotsprüfung</b>: je Position Ampel und Prüfvermerk, wie bei einer Rechnung. Grün und Gelb zählen als Mehrkosten, abzüglich der LV-Positionen, die dafür entfallen. Der Betrag geht von selbst in die Kostenprognose.</li>
+          <li>Unter der Tabelle: <b>Prüf-PDF zum Angebot</b>. Das Originalangebot bekommt Haken, Hinweise, den gelben Prüfkasten, Stempel und Unterschrift. Die Datei heißt z. B. <code>A105279_pruefvermerk.pdf</code> und liegt im Projektordner. Diese PDF schicken Sie an Bauherr und Architekt zur Beauftragung.</li>
+          <li>Rechnet die Fa. Wahl den Nachtrag später ab, erscheinen die Positionen in der Rechnung mit „NT“. Neue Positionsnummern, die nicht im LV stehen, kommen dabei automatisch als Nachtrag ins LV.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>5. Was passiert mit dem Alten, wenn etwas Neues dazukommt?</summary>
+        <ul>
+          <li><b>Jede Rechnung ist für sich gespeichert.</b> Eine neue Rechnung ändert an der alten keine Ampel, keine Menge, keinen Kommentar und keine Stellungnahme. Die alte bleibt oben im Feld <b>Rechnung</b> auswählbar.</li>
+          <li><b>Doppelt geht nicht.</b> Ist z. B. die 2. Teilrechnung schon da, bricht das Einlesen ab, statt sie zu überschreiben. Der Knopf <b>＋ Neue Rechnung</b> verhält sich genauso.</li>
+          <li><b>Eigene Dateien je Rechnung.</b> Jede Rechnung hat ihre eigene Excel-Datei und ihre eigene gestempelte PDF. <b>Excel und Prüf-PDF</b> schreibt nur die Dateien der Rechnung, die oben ausgewählt ist. Vor dem Klick also kurz oben nachsehen.</li>
+          <li><b>Mengen über alle Rechnungen.</b> Für „% LV (kum.)“ zählen die geprüften Mengen der früheren Rechnungen mit. Ändern Sie später eine alte Rechnung, ändert sich diese Spalte bei der neuen mit.</li>
+          <li><b>Ihre Eingaben im Browser.</b> Kommt eine neue Rechnung oder ein neuer Nachtrag hinzu, wird beides ergänzt. Was Sie im Browser schon geändert haben, bleibt erhalten.</li>
+          <li><b>Sicherung.</b> Vor jedem Schreiben legt das Programm eine Kopie der Datenbasis im Ordner <code>backup</code> ab. Die Excel-Datei und die gestempelte PDF derselben Rechnung werden beim nächsten Klick ersetzt, nicht gesichert. Deshalb erst den Testlauf.</li>
+          <li><b>Online.</b> Die Fa. Wahl und der Bauherr sehen eine neue Rechnung erst nach dem nächsten Klick auf <b>Excel und Prüf-PDF</b>. Das gilt auch, wenn Sie dabei eine andere Rechnung ausgewählt haben: online geht immer der ganze Stand. Die Korrespondenz und Ihr Honorar sind nie online.</li>
+        </ul>
+      </details>
+    </div>
+  </details>
   <div id="banners"></div>
+
+  <section class="card honorar no-print pruefer-only" id="honorar" hidden></section>
 
   <section class="card meta" id="meta"></section>
 
@@ -354,8 +486,7 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   <details class="hist card no-print pruefer-only" id="korr"></details>
   <details class="hist card no-print pruefer-only" id="hist"></details>
   <p class="foot-note no-print pruefer-only">
-    Änderungen werden automatisch im Browser gespeichert. Für Excel, PDF-Prüfvermerk und Online-Stand: „⤓ JSON exportieren“ klicken
-    und im Projektordner <code>Aktualisieren.bat</code> doppelklicken.
+    Änderungen werden automatisch im Browser gespeichert. Excel, gestempelte Rechnung und Online-Stand entstehen über den Knopf <b>Excel und Prüf-PDF</b>.
   </p>
 </main>
 
@@ -485,8 +616,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261016173829" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261016173829" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261021161610" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261021161610" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -599,7 +730,7 @@ async function decryptSeed(enc, pw) {
 function restrictFor(d) {
   if (!READONLY) return d;
   const hidden = x => x.intern || (IS_AN && x.nur_ag);
-  delete d.korrespondenz; d.historie = [];
+  delete d.korrespondenz; delete d.honorar; d.historie = [];
   for (const a of Object.values(d.akte || {})) { delete a.stand; a.eintraege = (a.eintraege || []).filter(x => !hidden(x)); }
   d.themen = (d.themen || []).filter(t => !hidden(t));
   for (const t of d.themen) {
@@ -679,10 +810,12 @@ async function init() {
     if (newer && !local.meta?.lokal_geaendert) {
       adoptSeed(seed, true);
       setTimeout(() => toast("Aktueller Stand geladen (inkl. neuer Stellungnahmen der Fa. Wahl).", "ok"), 0);
+    } else if (newer && addNewFromSeed(seed)) {
+      db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal();
     } else if (newer) {
       banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
-        Sie haben im Browser aber noch <b>Änderungen, die nicht exportiert wurden</b>. Tipp: erst „JSON exportieren“ und
-        <code>Aktualisieren.bat</code> doppelklicken – dann wird beides zusammengeführt.`, "", [
+        Sie haben im Browser noch <b>Änderungen, die nicht exportiert wurden</b>. „Stellungnahmen holen“ übernimmt nur die grüne Spalte.
+        „Datenbasis übernehmen“ ersetzt den Browser-Stand durch die Datei.`, "", [
         ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
         ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
     }
@@ -698,6 +831,7 @@ async function init() {
   renderAll();
   setState(IS_AG ? "Stand vom " + deDT(db.meta?.generiert_am || db.meta?.veroeffentlicht_am || "") : local ? "Browser-Stand geladen" : "Ausgangsdaten geladen");
   logZugriff();
+  startHelfer();
   if (IS_AG && db.rechnungen.length) {
     banner(`<b>Ansicht für Bauherr und Architekt</b> (nur lesen). Sie sehen die geprüften Positionen mit Ampel und Prüfvermerk,
       die Stellungnahmen der Fa. Wahl (grüne Spalte), die Kosten auf einen Blick sowie Nachträge &amp; Klärungspunkte.
@@ -708,6 +842,33 @@ async function init() {
       Positionen Stellung (z. B. Raum/Montageort, Nachweise, Begründung). Die Prüfwerte sind schreibgeschützt. Ihre Eingaben werden automatisch
       in diesem Browser gespeichert. Zum Schluss oben rechts auf <b>„✅ Stellungnahme abschließen“</b> klicken.`, "ok");
   }
+}
+
+/* Neue Rechnungen, Nachträge und LV-Positionen aus der Datei ergänzen, ohne Vorhandenes anzufassen. */
+function addNewFromSeed(seed) {
+  const neu = [];
+  const ids = new Set(db.rechnungen.map(r => r.id));
+  for (const r of seed.rechnungen || []) if (!ids.has(r.id)) { db.rechnungen.push(structuredClone(r)); neu.push(r.bezeichnung + " " + (r.rechnungsnummer || "")); }
+  db.themen ||= [];
+  const weg = new Set(seed.meta?.themen_entfernt || []);
+  for (const t of db.themen.filter(x => weg.has(x.id))) neu.push(t.id + " entfernt");
+  db.themen = db.themen.filter(t => !weg.has(t.id));
+  for (const t of seed.themen || []) {
+    const i = db.themen.findIndex(x => x.id === t.id);
+    if (i < 0) { db.themen.push(structuredClone(t)); neu.push(t.id + " " + (t.titel || "")); }
+    else if ((t.geaendert_am || "") > (db.themen[i].geaendert_am || "")) { db.themen[i] = structuredClone(t); neu.push(t.id + " aktualisiert"); }
+  }
+  const mails = dropMails(seed.meta?.korr_entfernt);
+  if (mails) neu.push(mails + " Mail(s) dem anderen Bauwerk zugeordnet");
+  if (db.lv?.positionen && seed.lv?.positionen) {
+    const oz = new Set(db.lv.positionen.map(p => p.oz));
+    for (const p of seed.lv.positionen) if (!oz.has(p.oz)) db.lv.positionen.push(structuredClone(p));
+  }
+  db.akte ||= {};
+  for (const [k, a] of Object.entries(seed.akte || {})) if (!db.akte[k]) db.akte[k] = structuredClone(a);
+  mergeMails(seed.korrespondenz);
+  if (neu.length) setTimeout(() => toast("Aus der Datei übernommen: " + neu.join(", ") + ". Ihre übrigen Eingaben sind geblieben.", "ok"), 0);
+  return neu.length > 0;
 }
 
 function adoptSeed(seed, silent) {
@@ -792,6 +953,7 @@ const Remote = {
   async push(auto) {
     if (settings.mode === "local") throw new Error("Kein Remote-Speicher konfiguriert.");
     const payload = structuredClone(db);
+    delete payload.honorar;
     payload.meta.revision = (Number(db.meta.revision) || 0) + 1;
     payload.meta.geaendert_am = nowIso();
     payload.meta.geaendert_von = settings.user || "Browser";
@@ -837,11 +999,90 @@ function banner(html, cls = "", actions = []) {
 function toast(msg, cls = "") { const el = banner(esc(msg), cls); setTimeout(() => el.remove(), 6000); }
 
 /* ---------- Rendering ---------- */
+const HONORAR_MARKS = "jwgi.honorar.mitsch-zalg.bezahlt.v1";
+function honorarMarks() {
+  try { return JSON.parse(localStorage.getItem(HONORAR_MARKS) || "{}"); } catch { return {}; }
+}
+function honorarIstBezahlt(id, vorgabe) {
+  const m = honorarMarks();
+  return Object.prototype.hasOwnProperty.call(m, id) ? !!m[id].bezahlt : !!vorgabe;
+}
+function honorarAm(id) { return honorarMarks()[id]?.am || ""; }
+
+function renderHonorar() {
+  const el = $("#honorar");
+  const src = !READONLY && (window.AUDIT_SEED?.honorar || db?.honorar);
+  if (!src) { el.hidden = true; el.innerHTML = ""; return; }
+  const h = structuredClone(src);
+  const rech = h.rechnungen || [];
+  const byPlan = Object.fromEntries(rech.map(r => [r.plan_id, r]));
+  const offen = [];
+  for (const r of rech) {
+    const frei = r.freigabe?.frei_brutto ?? r.brutto;
+    if (!honorarIstBezahlt(r.id, r.bezahlt)) offen.push(`${r.id}: ${eur(frei)} brutto noch nicht als eingegangen markiert`);
+    if (r.freigabe && !honorarIstBezahlt(r.id + "#einbehalt", false)) {
+      offen.push(`Einbehalt ${r.id}: ${eur(r.freigabe.einbehalt_brutto)} brutto bis zur Klärung`);
+    }
+  }
+  const gestelltNetto = r2(rech.reduce((a, r) => a + r.netto, 0));
+  const bezahltBrutto = r2(rech.reduce((a, r) => {
+    let s = a;
+    if (honorarIstBezahlt(r.id, r.bezahlt)) s += (r.freigabe?.frei_brutto ?? r.brutto);
+    if (r.freigabe && honorarIstBezahlt(r.id + "#einbehalt", false)) s += r.freigabe.einbehalt_brutto;
+    return s;
+  }, 0));
+  const nochNetto = r2((h.plan || []).filter(p => !byPlan[p.id]).reduce((a, p) => a + p.skonto_netto, 0));
+  const v = h.vertrag || {};
+  const haken = (id, vorgabe, label) => {
+    const on = honorarIstBezahlt(id, vorgabe);
+    const am = honorarAm(id);
+    return `<label class="haken"><input type="checkbox" data-honorar-paid="${esc(id)}" ${on ? "checked" : ""}> ${esc(label)}${on && am ? " · " + deDate(am) : ""}</label>`;
+  };
+  const rows = (h.plan || []).map(p => {
+    const r = byPlan[p.id];
+    const istOffen = r && (!honorarIstBezahlt(r.id, r.bezahlt) || (r.freigabe && !honorarIstBezahlt(r.id + "#einbehalt", false)));
+    let stand, kasten;
+    if (!r) { stand = "noch nicht gestellt"; kasten = "–"; }
+    else if (r.freigabe) {
+      const f = r.freigabe;
+      stand = `gestellt ${eur(r.brutto)}<div class="sub">freigegeben ${eur(f.frei_brutto)} · einbehalten ${eur(f.einbehalt_brutto)}</div>`;
+      kasten = haken(r.id, r.bezahlt, eur(f.frei_brutto) + " eingegangen") + haken(r.id + "#einbehalt", false, "Einbehalt erledigt");
+    } else {
+      stand = (honorarIstBezahlt(r.id, r.bezahlt) ? "bezahlt" : "offen") + (r.notiz ? `<div class="sub">${esc(r.notiz)}</div>` : "");
+      kasten = haken(r.id, r.bezahlt, "bezahlt");
+    }
+    return `<tr class="${istOffen ? "offen" : ""}">
+      <td>${esc(p.nr)}</td>
+      <td>${esc(p.text)}${r ? `<div class="sub">${esc(r.id)} vom ${deDate(r.datum)}</div>` : ""}</td>
+      <td class="num">${eur(p.netto)}</td>
+      <td class="num">${eur(p.skonto_netto)}</td>
+      <td>${stand}</td>
+      <td>${kasten}</td>
+    </tr>${r?.freigabe ? `<tr class="${istOffen ? "offen" : ""}"><td></td><td colspan="5"><div class="sub">${esc(r.freigabe.text)}</div></td></tr>` : ""}`;
+  }).join("");
+  el.hidden = false;
+  el.innerHTML = `<h2>Eigenes Honorar <small>nur Ihre Ansicht · nicht für Architekt und nicht für Fa. Wahl</small></h2>
+    <p class="sub">${esc(v.text || "")}</p>
+    ${offen.length ? `<div class="banner" style="margin-top:10px"><span><b>Offen.</b> ${offen.map(esc).join(" · ")}</span></div>` : `<div class="banner ok" style="margin-top:10px"><span>Keine offene eigene Rechnung.</span></div>`}
+    <div class="k-tiles">
+      <div class="k-tile"><span>Vertrag netto</span><b>${eur(v.netto)}</b></div>
+      <div class="k-tile"><span>Gestellt, netto</span><b>${eur(gestelltNetto)}</b></div>
+      <div class="k-tile gruen"><span>Eingegangen, brutto</span><b>${eur(bezahltBrutto)}</b></div>
+      <div class="k-tile ${offen.length ? "warn" : ""}"><span>Noch nicht gestellt, netto</span><b>${eur(nochNetto)}</b></div>
+    </div>
+    <table>
+      <thead><tr><th>AZ</th><th>Leistung</th><th class="num">vereinbart</th><th class="num">mit 3 % Skonto</th><th>Stand</th><th>Zahlung</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="sub" style="margin-top:8px">Der Haken bleibt in diesem Browser gespeichert. In der anderen Projektdatei (Altbau bzw. Neubau) denselben Haken noch einmal setzen. Druck und die Online-Ansichten enthalten diesen Block nicht.</p>`;
+}
+
 function renderAll() {
   const p = db.projekt || {};
   $("#prj-title").textContent = p.bezeichnung || "Rechnungsprüfung";
   $("#prj-sub").textContent = [p.adresse, p.auftragnehmer?.name && "AN: " + p.auftragnehmer.name, p.gewerk].filter(Boolean).join(" · ");
   document.title = `${p.kurz ? p.kurz + " – " : ""}Rechnungsprüfung LPH 8 – ${p.bezeichnung || ""}`;
+  renderHonorar();
   $("#inv-select").innerHTML = db.rechnungen.map(r =>
     `<option value="${esc(r.id)}" ${r.id === currentId ? "selected" : ""}>${esc(r.bezeichnung)} · ${esc(r.rechnungsnummer)} vom ${deDate(r.datum)}</option>`).join("");
   $("#btn-edit").classList.toggle("on", ui.edit);
@@ -1079,6 +1320,7 @@ function renderFilters() {
   $("#filters").innerHTML = (IS_AN ? chip("rueckfrage", `Rückfragen offen`, rfOpen) : "") +
     chip("alle", "Alle", i.positionen.length) + chip("gruen", "Grün", c.gruen) + chip("gelb", "Gelb", c.gelb) +
     chip("rot", "Rot", c.rot) + (c[""] ? chip("offen", "offen", c[""]) : "") +
+    (READONLY ? "" : chip("beantwortet", "mit Stellungnahme", i.positionen.filter(hasAnswer).length)) +
     `<span style="font-size:12px;color:var(--wahl-head);font-weight:700">Stellungnahmen: ${rf.length - rfOpen} / ${rf.length} Rückfragen beantwortet</span>` +
     `<select id="f-block"><option value="alle">Alle Blöcke</option>${blocksOf(i).map(b => `<option value="${b.id}" ${ui.block === b.id ? "selected" : ""}>${esc(b.titel)}</option>`).join("")}</select>
      <input type="search" id="f-search" placeholder="Suche OZ, Text, Vermerk, Stellungnahme …" value="${esc(ui.search)}">
@@ -1090,6 +1332,7 @@ function renderFilters() {
 
 function visible(p) {
   if (ui.status === "rueckfrage") { if (!needsAnswer(p) || hasAnswer(p)) return false; }
+  else if (ui.status === "beantwortet") { if (!hasAnswer(p)) return false; }
   else if (ui.status !== "alle" && (ui.status === "offen" ? (p.status || "") !== "" : p.status !== ui.status)) return false;
   if (ui.block !== "alle" && p.block !== ui.block) return false;
   if (ui.search) {
@@ -1107,12 +1350,23 @@ function renderTable() {
     <th>Menge<br>${kurz}</th><th>EP<br>${kurz}</th><th>Betrag<br>${kurz}</th>
     <th class="pr">Prüf-<br>Menge</th><th class="pr">Prüf-EP</th><th class="pr">Prüf-<br>Betrag</th><th>Differenz</th><th>% LV<br>(kum.)</th>
     <th>Ampel</th><th>Kat.</th><th>Prüfvermerk JWGI</th><th class="wahl">Stellungnahme Elektriker (Fa. Wahl)</th>${ui.edit ? "<th></th>" : ""}</tr></thead><tbody>`;
+  const aufRechnung = new Set(i.positionen.map(p => p.oz));
+  const q = (ui.search || "").trim().toLowerCase();
+  const grauErlaubt = ui.status === "alle";
   for (const b of blocksOf(i)) {
     const idx = i.positionen.map((p, n) => n).filter(n => inBlock(i.positionen[n], b)).sort((x, y) => cmpOz(i.positionen[x].oz, i.positionen[y].oz));
     const shown = idx.filter(n => visible(i.positionen[n]));
-    if (!shown.length) continue;
+    const grau = grauErlaubt && (ui.block === "alle" || ui.block === b.id)
+      ? (db.lv?.positionen || []).filter(p => !aufRechnung.has(p.oz) && blockFuerLv(p) === b.id
+        && (!q || `${p.oz} ${p.kurztext || ""}`.toLowerCase().includes(q)))
+      : [];
+    if (!shown.length && !grau.length) continue;
+    const zeilen = [
+      ...shown.map(n => ({ oz: i.positionen[n].oz, html: rowHtml(i, i.positionen[n], n, lvm, prior) })),
+      ...grau.map(p => ({ oz: p.oz, html: lvZeileHtml(p) })),
+    ].sort((a, b) => cmpOz(a.oz, b.oz));
     h += `<tr class="blockrow"><td colspan="${cols}">${esc(b.titel)}<small>${esc(b.hinweis || "")}</small></td></tr>`;
-    for (const n of shown) h += rowHtml(i, i.positionen[n], n, lvm, prior);
+    for (const z of zeilen) h += z.html;
     h += `<tr class="subtotal" data-block="${b.id}"><td class="oz"></td><td>Zwischensumme ${esc(b.titel.split(" – ")[0])}</td><td colspan="4"></td>
       <td class="num s-g"></td><td colspan="2"></td><td class="num s-p"></td><td class="num s-d"></td><td colspan="${ui.edit ? 6 : 5}"></td></tr>`;
   }
@@ -1122,7 +1376,73 @@ function renderTable() {
   refreshComputed();
   autosizeAll();
 }
+function blockFuerLv(p) {
+  if (p.typ === "Bedarf") return "REGIE";
+  if (p.typ === "Nachtrag") return "NT";
+  return "LV";
+}
+function lvZeileHtml(p) {
+  return `<tr class="lv-offen">
+    <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
+    <td class="txt">${esc(p.kurztext || "")}${ersatzHtml(p.oz, p.menge, p.einheit)}</td>
+    <td class="num">${lvMengeZelle(p.menge, p.oz, p.einheit)}</td>
+    <td class="c">${esc(p.einheit || "")}</td>
+    <td class="num">–</td><td class="num">${p.ep != null ? eur(p.ep) : "–"}</td><td class="num">–</td>
+    <td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td>
+    <td class="c">–</td><td class="c">–</td>
+    <td>noch nicht abgerechnet</td><td></td>${ui.edit ? "<td></td>" : ""}
+  </tr>`;
+}
 
+/* Nachtrag ersetzt eine LV-Menge. Die gespeicherte LV-Menge bleibt, sonst würde die Auftragssumme schrumpfen und die Minderung doppelt zählen. */
+function lvErsatz(oz) {
+  const aus = [];
+  for (const t of db.themen || []) {
+    if (isHidden(t)) continue;
+    for (const p of t.angebot_pos || []) {
+      if (!zaehlt(p) || p.status === "rot") continue;
+      for (const e of p.ersetzt || []) {
+        if (e.oz !== oz || e.menge == null) continue;
+        aus.push({ id: t.id, angebot: t.angebot || "", pos: p.pos, menge: Number(e.menge), fest: p.status === "gruen" || p.status === "gelb" });
+      }
+    }
+  }
+  return aus;
+}
+function lvMengeAnzeige(menge, oz) {
+  const aus = lvErsatz(oz);
+  const fest = aus.filter(x => x.fest), offen = aus.filter(x => !x.fest);
+  const weg = r2(fest.reduce((a, x) => a + x.menge, 0));
+  const geplant = r2(offen.reduce((a, x) => a + x.menge, 0));
+  const basis = menge == null ? null : Number(menge);
+  const ep = lvMap()[oz]?.ep;
+  const geld = n => ep == null ? "" : `, diese Position ${eur(-r2(n * ep))}`;
+  return {
+    fest, offen, weg, geplant, basis, ep,
+    bleiben: basis == null ? null : r2(basis - weg),
+    danach: basis == null ? null : r2(basis - weg - geplant),
+    geld,
+  };
+}
+function lvMengeZelle(menge, oz, einheit) {
+  if (menge == null) return "–";
+  const a = lvMengeAnzeige(menge, oz);
+  const me = esc(einheit || "");
+  const preis = n => a.ep == null ? "" : `<br>diese Position ${eur(-r2(n * a.ep))}`;
+  if (a.weg) return `${fmt(a.bleiben)}<div class="small ers">statt ${fmt(menge)} ${me}${preis(a.weg)}</div>`;
+  if (a.geplant) return `${fmt(menge)}<div class="small ers">danach ${fmt(a.danach)} ${me}${preis(a.geplant)}<br>sobald der Nachtrag<br>freigegeben ist</div>`;
+  return fmt(menge);
+}
+function ersatzHtml(oz, lvMenge, einheit) {
+  const a = lvMengeAnzeige(lvMenge, oz);
+  if (!a.fest.length && !a.offen.length) return "";
+  const me = esc(einheit || "");
+  const teil = x => `${fmt(x.menge)} ${me} durch ${esc(x.id)}${x.angebot ? " " + esc(x.angebot) : ""} Pos. ${esc(x.pos)}`;
+  const zeilen = [];
+  if (a.fest.length) zeilen.push(a.fest.map(teil).join(", ") + " entfallen" + (a.bleiben == null ? "" : `, es bleiben ${fmt(a.bleiben)} ${me}`) + a.geld(a.weg));
+  if (a.offen.length) zeilen.push(a.offen.map(teil).join(", ") + " vorgesehen, Ampel noch offen");
+  return `<div class="small ers">${zeilen.join("<br>")}</div>`;
+}
 function autosizeAll() {
   $$("#pos-table textarea").forEach(autosize);
   requestAnimationFrame(() => $$("#pos-table textarea").forEach(autosize));
@@ -1140,8 +1460,8 @@ function rowHtml(i, p, n, lvm, prior) {
   const rfWarn = p.betrag_rechnung != null && r2(p.betrag_rechnung) !== betrag(p, false) ? ` <span class="warn-ic" title="lt. Rechnung ${eur(p.betrag_rechnung)} – Rechenfehler">!</span>` : "";
   return `<tr class="st-${st || "offen"}" data-i="${n}">
     <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
-    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${tag}${esc(p.kurztext)}`}</td>
-    <td class="num">${p.lv_menge == null ? "–" : fmt(p.lv_menge)}</td>
+    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${tag}${esc(p.kurztext)}`}${ersatzHtml(p.oz, lv.menge != null ? lv.menge : p.lv_menge, p.einheit || lv.einheit)}</td>
+    <td class="num">${lvMengeZelle(p.lv_menge != null ? p.lv_menge : lv.menge, p.oz, p.einheit || lv.einheit)}</td>
     <td class="c">${esc(p.einheit)}</td>
     <td class="num">${ui.edit ? numIn("menge") : fmt(p.menge)}</td>
     <td class="num">${ui.edit ? numIn("ep") : eur(p.ep)}</td>
@@ -1260,6 +1580,82 @@ function rapportHtml() {
       ${rp.hinweis ? `<div style="margin-top:4px">${esc(rp.hinweis)}</div>` : ""}</div>`;
 }
 
+/* Angebotsprüfung: Ampel je Angebotsposition, entfallende LV-Positionen, Mehrkosten */
+const zaehlt = p => !p.alternativ;
+const angenommen = p => zaehlt(p) && (p.status === "gruen" || p.status === "gelb");
+function entfallBetrag(e) { const ep = lvMap()[e.oz]?.ep; return e.menge == null || ep == null ? 0 : r2(e.menge * ep); }
+function angebotRechnen(t) {
+  const list = t.angebot_pos || [];
+  const sum = f => r2(list.filter(f).reduce((a, p) => a + (Number(p.gp) || 0), 0));
+  const entfall = r2(list.filter(angenommen).flatMap(p => p.ersetzt || []).reduce((a, e) => a + entfallBetrag(e), 0));
+  const gruen = sum(p => zaehlt(p) && p.status === "gruen"), gelb = sum(p => zaehlt(p) && p.status === "gelb");
+  return { angebot: sum(zaehlt), gruen, gelb, entfall, mehr: r2(gruen + gelb - entfall) };
+}
+function angebotHtml(t) {
+  if (!t.angebot_pos?.length) return "";
+  const lv = lvMap(), edit = !READONLY, s = angebotRechnen(t);
+  const ersetzt = p => (p.ersetzt || []).map(e => `entfällt im LV: ${e.menge == null ? "Menge offen" : fmt(e.menge) + " ×"} Pos. ${esc(e.oz)} ${esc(lv[e.oz]?.kurztext || "")}`
+    + `${lv[e.oz]?.ep != null ? ` à ${eur(lv[e.oz].ep)}` : ""}${e.hinweis ? ` (${esc(e.hinweis)})` : ""}`).join("<br>");
+  const art = p => p.alternativ ? "Alternative" : p.ersetzt?.length ? "Ersatz für LV" : "Zusatz zum LV";
+  const rows = t.angebot_pos.map((p, i) => { const st = p.status || "";
+    return `<tr class="st-${st || "offen"}${p.alternativ ? " alt" : ""}"><td class="oz">${esc(p.pos)}</td><td class="num">${fmt(p.menge)} ${esc(p.einheit || "")}</td>
+      <td>${esc(p.text)}${p.ersetzt?.length ? `<div class="small ers">${ersetzt(p)}</div>` : ""}</td>
+      <td class="num">${eur(p.ep)}</td><td class="num">${p.alternativ ? `(${eur(p.gp)})` : eur(p.gp)}</td><td>${art(p)}</td>
+      <td class="c">${edit ? `<select class="amp ${st || "offen"}" data-ap="${i}" data-apf="status">${["gruen", "gelb", "rot", ""].map(v => `<option value="${v}" ${v === st ? "selected" : ""}>${AMPEL[v]}</option>`).join("")}</select>`
+        : `<span class="dot ${st || "offen"}">${AMPEL[st]}</span>`}</td>
+      <td>${edit ? `<textarea rows="3" data-ap="${i}" data-apf="kommentar" placeholder="Prüfvermerk …">${esc(p.kommentar || "")}</textarea>
+        <input class="hint" data-ap="${i}" data-apf="pdf_hinweis" value="${esc(p.pdf_hinweis || "")}" placeholder="Kurzhinweis im Prüf-PDF (leer = Prüfvermerk gekürzt)">` : esc(p.kommentar || "")}</td></tr>`; }).join("");
+  const pdfKnopf = edit && location.protocol === "file:" ? `<div class="ang-pdf">
+      <button type="button" class="btn primary" id="btn-ang-pdf"${t.angebot_pdf ? "" : " disabled"}>Prüf-PDF zum Angebot</button>
+      <small>${t.angebot_pdf ? `Stempelt das Originalangebot mit Haken, Hinweisen, Prüfkasten, Stempel und Unterschrift. Das Original bleibt unverändert, die Prüf-PDF wird bei jedem Klick neu geschrieben.`
+        : "Für dieses Angebot ist noch keine Original-PDF hinterlegt."}</small></div>` : "";
+  return `<div id="ang-box"><h2 style="margin:14px 0 4px">Angebotsprüfung ${esc(t.angebot || "")}</h2>
+    ${t.angebot_hinweis ? `<div class="ang-hinweis">${esc(t.angebot_hinweis)}</div>` : ""}
+    <table class="ang"><thead><tr><th>Pos.</th><th style="text-align:right">Menge</th><th>Leistung</th><th style="text-align:right">EP</th><th style="text-align:right">GP</th><th>Art</th><th>Ampel</th><th>Prüfvermerk</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div class="ang-sum">Angebot ohne Alternativen <b>${eur(s.angebot)}</b> · freigegeben (grün) <b>${eur(s.gruen)}</b> · vorläufig (gelb) ${eur(s.gelb)}
+      · entfallende LV-Leistung ${eur(-s.entfall)}<br><b>Mehrkosten für den Bauherrn ${eur(s.mehr)}</b> (netto, grün und gelb abzüglich entfallender LV-Positionen)</div>${pdfKnopf}</div>`;
+}
+$("#akte-body").addEventListener("click", async e => {
+  const btn = e.target.closest("#btn-ang-pdf"); if (!btn || READONLY || akteCtx?.kind !== "thema") return;
+  const t = (db.themen || []).find(x => x.id === akteCtx.key); if (!t) return;
+  if (helferFlight) { toast("Einen Moment, es läuft schon ein Vorgang.", ""); return; }
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Schreibe Prüf-PDF …";
+  helferFlight = true;
+  try {
+    const r = await fetch(HELFER + "angebot", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: db.projekt.id, thema: t }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data || data.ok === false) throw new Error(data?.fehler || "Prüf-PDF fehlgeschlagen");
+    openLocal(data.pdf_url);
+    toast("Prüf-PDF geschrieben: " + data.pdf + ". Es liegt im Projektordner.", "ok");
+    if (data.hinweis) toast(data.hinweis, "");
+  } catch (err) {
+    toast("Prüf-PDF nicht möglich (" + err.message + ").", "err");
+  } finally {
+    helferFlight = false; btn.disabled = false; btn.textContent = label;
+  }
+});
+function angebotUebernehmen(t) {
+  const s = angebotRechnen(t);
+  t.freigegeben_netto = s.gruen;
+  t.prognose_netto = s.mehr;
+  t.geaendert_am = nowIso();
+}
+$("#akte-body").addEventListener("change", e => {
+  const el = e.target.closest("[data-ap]"); if (!el || READONLY || akteCtx?.kind !== "thema") return;
+  const t = (db.themen || []).find(x => x.id === akteCtx.key), p = t?.angebot_pos?.[+el.dataset.ap]; if (!p) return;
+  const f = el.dataset.apf, alt = p[f] ?? "";
+  if (String(alt) === el.value) return;
+  p[f] = el.value;
+  logChange("", `${t.id} Angebot Pos. ${p.pos} ${f === "status" ? "Ampel" : f === "pdf_hinweis" ? "PDF-Hinweis" : "Prüfvermerk"}`, f === "status" ? AMPEL[alt] : alt, f === "status" ? AMPEL[el.value] : el.value);
+  angebotUebernehmen(t); touch(); renderAll();
+  $("#ang-box").outerHTML = angebotHtml(t);
+  $("#form-akte").prognose.value = fmt(t.prognose_netto);
+});
+
 let akteCtx = null;
 function openAkte(kind, key) {
   const f = $("#form-akte"); f.reset();
@@ -1276,7 +1672,9 @@ function openAkte(kind, key) {
     extra = `<div class="small" style="margin-top:6px">${esc(t.typ || "")} · Status: <b>${esc(t.status || "–")}</b>${t.angebot ? ` · Angebot ${esc(t.angebot)} vom ${deDate(t.angebot_datum)}` : ""}${t.betrag_netto != null ? ` · ${eur(t.betrag_netto)} netto` : ""}${t.freigegeben_netto != null ? ` · freigegeben ${eur(t.freigegeben_netto)}` : ""}${(t.positionen || []).length ? ` · Pos. ${t.positionen.map(esc).join(", ")}` : ""}</div>`
       + (t.veranlassung ? `<div class="veranl" style="font-size:12.5px">Veranlassung: ${esc(t.veranlassung)}</div>` : "");
     if ((t.positionen || []).some(isRegie)) extra += rapportHtml();
+    extra += angebotHtml(t);
   }
+  $("#dlg-akte").classList.toggle("mit-angebot", kind === "thema" && !!(db.themen || []).find(x => x.id === key)?.angebot_pos?.length);
   akteCtx = { kind, key };
   $("#akte-title").textContent = title;
   const standHtml = READONLY ? "" : `<div class="stand">${offen ? `<span class="pill offen">offen</span> ` : `<span class="pill ok">geklärt</span> `}${esc(stand || "Kein Stand erfasst.")}</div>`;
@@ -1310,6 +1708,7 @@ $("#dlg-akte").addEventListener("close", () => {
   if (target.stand !== f.stand.value || !!target.offen !== f.offen.checked) logChange(kind === "pos" ? key : "", "Stand " + key, target.stand, f.stand.value);
   target.stand = f.stand.value; target.offen = f.offen.checked;
   if (kind === "thema") {
+    target.geaendert_am = nowIso();
     const v = f.prognose.value.trim() === "" ? null : parseNum(f.prognose.value);
     if (!Number.isNaN(v) && v !== (target.prognose_netto ?? null)) {
       logChange("", "Prognose " + key, target.prognose_netto ?? "", v ?? "");
@@ -1335,21 +1734,79 @@ function renderThemen() {
         <td class="num" style="text-align:right">${t.betrag_netto != null ? eur(t.betrag_netto) : "–"}</td>
         <td class="num" style="text-align:right">${t.freigegeben_netto != null ? eur(t.freigegeben_netto) : "–"}</td>
         <td>${last ? `${deDT(last.datum)} · ${esc(last.von || last.rolle)}` : "–"}</td><td>💬 ${visibleEntries(t.eintraege).length}</td></tr>`; }).join("")}
-    </tbody></table>`;
+    </tbody></table>${entfallHtml(list)}`;
+}
+function entfallHtml(list) {
+  const lv = lvMap();
+  const zeilen = list.flatMap(t => (t.angebot_pos || []).filter(p => zaehlt(p) && p.status !== "rot")
+    .flatMap(p => (p.ersetzt || []).map(e => ({ t, p, e }))));
+  if (!zeilen.length) return "";
+  const stand = p => p.status === "gruen" ? `<span class="pill ok">freigegeben</span>` : p.status === "gelb" ? `<span class="pill offen">vorläufig</span>` : `<span class="pill">noch offen</span>`;
+  const summe = r2(zeilen.filter(z => angenommen(z.p)).reduce((a, z) => a + entfallBetrag(z.e), 0));
+  return `<h2 style="margin:16px 0 4px">LV-Positionen, die durch Nachträge entfallen</h2>
+    <table class="themen-table"><thead><tr><th>LV-Pos.</th><th>Leistung lt. LV</th><th style="text-align:right">entfällt</th><th style="text-align:right">LV-EP</th>
+      <th style="text-align:right">Minderung</th><th>ersetzt durch</th><th>Stand</th></tr></thead><tbody>
+    ${zeilen.map(({ t, p, e }) => `<tr class="clickable" data-thema-row="${esc(t.id)}"><td><b>${esc(e.oz)}</b></td>
+      <td>${esc(lv[e.oz]?.kurztext || "")}${e.hinweis ? `<div class="small" style="color:var(--muted)">${esc(e.hinweis)}</div>` : ""}</td>
+      <td class="num" style="text-align:right">${e.menge == null ? "offen" : fmt(e.menge) + " " + esc(lv[e.oz]?.einheit || "")}</td>
+      <td class="num" style="text-align:right">${lv[e.oz]?.ep != null ? eur(lv[e.oz].ep) : "–"}</td>
+      <td class="num" style="text-align:right">${e.menge == null ? "–" : eur(-entfallBetrag(e))}</td>
+      <td>${esc(t.id)} ${esc(t.angebot || "")} Pos. ${esc(p.pos)}<div class="small" style="color:var(--muted)">${esc(p.text)}</div></td><td>${stand(p)}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="small" style="margin-top:4px">Summe der Minderung aus freigegebenen und vorläufigen Positionen: <b>${eur(-summe)}</b> netto. Diese Mengen sind bei der Rechnungsprüfung nicht mehr zu vergüten.</div>`;
 }
 $("#themen").addEventListener("click", e => { const r = e.target.closest("[data-thema-row]"); if (r) openAkte("thema", r.dataset.themaRow); });
 $("#pos-table").addEventListener("click", e => { const b = e.target.closest("[data-akte]"); if (b) { e.stopPropagation(); openAkte("pos", b.dataset.akte); } });
 
 function renderKorr() {
   const k = [...(db.korrespondenz || [])].sort((a, b) => b.datum.localeCompare(a.datum));
-  $("#korr").innerHTML = `<summary>Korrespondenz (${k.length} archivierte Mails)</summary>
-    <div style="max-height:360px;overflow:auto"><table class="korr-list"><thead><tr><th>Nr.</th><th>Datum</th><th>Von</th><th>Betreff / Zusammenfassung</th><th>Bezug</th><th>Dateien</th></tr></thead><tbody>
-    ${k.map(x => `<tr><td><b>${esc(x.id)}</b></td><td>${deDT(x.datum)}</td><td>${esc((x.von || "").replace(/<.*>/, ""))}</td>
-      <td><b>${esc(x.betreff)}</b><div>${esc(x.zusammenfassung || "")}</div></td>
+  const offen = k.filter(x => x.zuordnung_offen).length;
+  const zuordnen = location.protocol === "file:" && !READONLY;
+  const bauwerk = x => `<select class="bauwerk" data-mail="${esc(mailKey(x))}">
+      <option value="">${x.zuordnung_offen ? "bitte wählen" : "–"}</option>
+      <option value="altbau">nur Altbau</option><option value="neubau">nur Neubau</option><option value="beide">Altbau und Neubau</option></select>`;
+  $("#korr").innerHTML = `<summary>Korrespondenz (${k.length} archivierte Mails)${offen ? ` <span class="pill offen">${offen} nicht zugeordnet</span>` : ""}</summary>
+    <p class="sub" style="padding:0 14px 8px">Neue Mails kommen dazu, wenn Sie oben auf „E-Mails holen“ klicken. Sie stehen zunächst in beiden Bauwerken.
+      In der Spalte „Bauwerk“ legen Sie fest, wohin sie gehören. Im anderen Bauwerk wird die Mail dann entfernt.</p>
+    <div style="max-height:360px;overflow:auto"><table class="korr-list"><thead><tr><th>Nr.</th><th>Datum</th><th>Von</th><th>Betreff / Zusammenfassung</th><th>Bezug</th><th>Dateien</th>${zuordnen ? "<th>Bauwerk</th>" : ""}</tr></thead><tbody>
+    ${k.map(x => `<tr${x.zuordnung_offen ? ` class="zuordnen"` : ""}><td><b>${esc(x.id)}</b></td><td>${deDT(x.datum)}</td><td>${esc((x.von || "").replace(/<.*>/, ""))}</td>
+      <td><b>${esc(x.betreff)}</b><div>${esc(x.zusammenfassung || "")}</div>${x.moeglich?.length ? `<div class="small">Eventuell ${esc(x.moeglich.join(", "))}</div>` : ""}</td>
       <td>${[...(x.positionen || []).map(o => `Pos. ${esc(o)}`), ...(x.themen || []).map(esc)].join(", ")}</td>
-      <td>${[x.datei, ...(x.anhaenge || [])].map(d => location.protocol === "file:" ? `<a href="${encodeURI(d.replace(/\\/g, "/"))}">${esc(d.split(/[\\/]/).pop())}</a>` : esc(d.split(/[\\/]/).pop())).join("<br>")}</td></tr>`).join("")}
+      <td>${[x.datei, ...(x.anhaenge || [])].map(d => location.protocol === "file:" ? `<a href="${encodeURI(d.replace(/\\/g, "/"))}"${/\.pdf$/i.test(d) ? ` target="_blank"` : ` data-extern="${esc(d)}" title="${/\.eml$/i.test(d) ? "Mail lesbar in einem neuen Tab öffnen" : "Im passenden Programm öffnen"}"`}>${esc(d.split(/[\\/]/).pop())}</a>` : esc(d.split(/[\\/]/).pop())).join("<br>")}</td>${zuordnen ? `<td>${bauwerk(x)}</td>` : ""}</tr>`).join("")}
     </tbody></table></div>`;
 }
+$("#korr").addEventListener("change", async e => {
+  const sel = e.target.closest("select.bauwerk"); if (!sel || !sel.value) return;
+  const hier = db.projekt.id, behalten = sel.value, weg = behalten !== "beide" && behalten !== hier;
+  const name = id => BEREICH[id] || id;
+  if (weg && !confirm(`Die Mail gehört zum ${name(behalten)}. Sie wird hier im ${name(hier)} entfernt, samt ihrer Dateien in diesem Ordner.`)) { sel.value = ""; return; }
+  if (behalten !== "beide" && !weg && !confirm(`Die Mail gehört nur zum ${name(hier)}. Sie wird im anderen Bauwerk entfernt, samt ihrer Dateien dort.`)) { sel.value = ""; return; }
+  sel.disabled = true;
+  try {
+    const data = await helfer("zuordnen.js?id=" + encodeURIComponent(hier) + "&mail=" + encodeURIComponent(sel.dataset.mail) + "&behalten=" + encodeURIComponent(behalten));
+    if (!data || data.ok === false) throw new Error(data?.fehler || "nicht zugeordnet");
+    if (weg) db.korrespondenz = db.korrespondenz.filter(k => mailKey(k) !== sel.dataset.mail);
+    else { const k = db.korrespondenz.find(x => mailKey(x) === sel.dataset.mail); if (k) delete k.zuordnung_offen; }
+    saveLocal(); renderKorr();
+    toast(weg ? `Mail dem ${name(behalten)} zugeordnet und hier entfernt.` : behalten === "beide" ? "Mail bleibt in Altbau und Neubau." : `Mail gehört nur zum ${name(hier)}.`, "ok");
+  } catch (err) {
+    sel.disabled = false; sel.value = "";
+    toast("Zuordnung nicht möglich (" + err.message + ").", "err");
+  }
+});
+$("#korr").addEventListener("click", async e => {
+  const a = e.target.closest("a[data-extern]"); if (!a) return;
+  e.preventDefault();
+  const query = "?id=" + encodeURIComponent(db.projekt.id) + "&datei=" + encodeURIComponent(a.dataset.extern);
+  if (/\.eml$/i.test(a.dataset.extern)) { window.open(HELFER + "mail.html" + query, "_blank"); return; }
+  try {
+    const data = await helfer("oeffnen.js" + query);
+    if (!data || data.ok === false) throw new Error(data?.fehler || "nicht geöffnet");
+    toast("Wird geöffnet.", "ok");
+  } catch (err) {
+    toast("Datei konnte nicht geöffnet werden (" + err.message + "). Sie liegt im Projektordner unter Korrespondenz.", "err");
+  }
+});
 
 function renderHistory() {
   const h = (db.historie || []).slice(-200).reverse();
@@ -1466,7 +1923,7 @@ $("#btn-export").onclick = () => {
   db.meta.lokal_geaendert = false;
   download("audit_data.json", JSON.stringify(db, null, 2) + "\n", "application/json");
   saveLocal();
-  toast("Exportiert. Jetzt im Projektordner Aktualisieren.bat doppelklicken – Ihre Änderungen werden automatisch aus dem Download-Ordner übernommen.", "ok");
+  toast("Sicherung liegt im Ordner Downloads. Excel und die gestempelte Rechnung entstehen über den Knopf „Excel und Prüf-PDF“.", "ok");
 };
 $("#btn-import").onclick = () => $("#file-import").click();
 $("#file-import").onchange = async e => {
@@ -1578,6 +2035,7 @@ $("#btn-send").onclick = async () => {
   $("#btn-mail-again").classList.remove("hidden");
 
   const exp = structuredClone(db);
+  delete exp.honorar;
   exp.meta = Object.assign({}, exp.meta, { export_rolle: "elektriker", exportiert_am: nowIso(), exportiert_von: settings.user });
   const fname = `Stellungnahme_Wahl_${i.id}_${i.rechnungsnummer}_${todayIso()}.json`;
   download(fname, JSON.stringify(exp, null, 2) + "\n", "application/json");
@@ -1609,6 +2067,193 @@ async function copyRoleLink(role, pwFile) {
   const ok = await copyText(url);
   toast(`${ok ? "In die Zwischenablage kopiert" : "Link"}: ${url} – Passwort (${pwFile} im Projektordner) bitte separat mitteilen.`, "ok");
 }
+const HELFER = "http://127.0.0.1:47321/";
+let helferFlight = false;
+function helfer(path) {
+  helferFlight = true;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    const timer = setTimeout(() => done(reject, new Error("Zeitüberschreitung")), 180000);
+    function done(fn, arg) { clearTimeout(timer); helferFlight = false; s.remove(); delete window.__jwgiHelfer; fn(arg); }
+    window.__jwgiHelfer = data => done(resolve, data);
+    s.onerror = () => done(reject, new Error("Helfer nicht erreichbar"));
+    s.src = HELFER + path + (path.includes("?") ? "&" : "?") + "t=" + Date.now();
+    document.head.appendChild(s);
+  });
+}
+const mailKey = k => k.message_id || k.id;
+function dropMails(entfernt) {
+  if (!entfernt?.length || !db.korrespondenz) return 0;
+  const weg = new Set(entfernt), vorher = db.korrespondenz.length;
+  db.korrespondenz = db.korrespondenz.filter(k => !weg.has(mailKey(k)));
+  return vorher - db.korrespondenz.length;
+}
+function moeglicherBezug(mail) {
+  const text = `${mail.betreff || ""} ${mail.zusammenfassung || ""} ${(mail.anhaenge || []).join(" ")}`;
+  const hat = wort => {
+    const w = String(wort || "").trim();
+    if (w.length < 5) return false;
+    return new RegExp("(?:^|[^A-Za-z0-9])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?:[^A-Za-z0-9]|$)", "i").test(text);
+  };
+  const treffer = [];
+  for (const t of db.themen || []) {
+    if (isHidden(t)) continue;
+    if (t.angebot && hat(t.angebot)) treffer.push(t.id);
+  }
+  for (const r of db.rechnungen || []) {
+    if (r.rechnungsnummer && hat(r.rechnungsnummer)) treffer.push(r.kurz || r.bezeichnung || r.rechnungsnummer);
+  }
+  return [...new Set(treffer)];
+}
+function mergeMails(list) {
+  if (!list) return { n: 0, hinweise: [] };
+  db.korrespondenz ||= [];
+  const known = new Map(db.korrespondenz.map(k => [mailKey(k), k]));
+  let n = 0;
+  const hinweise = [];
+  for (const k of list) {
+    const key = mailKey(k);
+    if (!key) continue;
+    const lokal = known.get(key);
+    if (lokal) { if (lokal.zuordnung_offen && !k.zuordnung_offen) delete lokal.zuordnung_offen; continue; }
+    const bezug = moeglicherBezug(k);
+    if (bezug.length) {
+      k.moeglich = bezug;
+      hinweise.push(k.id + " betrifft eventuell " + bezug.join(" und ") + ".");
+    }
+    db.korrespondenz.push(k);
+    known.set(key, k);
+    n++;
+  }
+  return { n, hinweise };
+}
+function applyStand(stand) {
+  if (!stand) return { n: 0, m: 0 };
+  const vorher = JSON.stringify((db.korrespondenz || []).map(k => [mailKey(k), !!k.zuordnung_offen]));
+  const n = stand.rechnungen ? mergeStellungnahmen(db, stand, true) : 0;
+  dropMails(stand.korr_entfernt);
+  const mails = mergeMails(stand.korrespondenz);
+  const m = mails.n;
+  const korr = vorher !== JSON.stringify((db.korrespondenz || []).map(k => [mailKey(k), !!k.zuordnung_offen]));
+  if (n || korr) saveLocal();
+  if (n) renderAll();
+  else if (korr) renderKorr();
+  return { n, m, hinweise: mails.hinweise };
+}
+function openLocal(url) {
+  if (!url) return;
+  const a = document.createElement("a");
+  a.href = url; a.target = "_blank";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function pollStand() {
+  if (helferFlight || READONLY || location.protocol !== "file:" || !db?.projekt?.id) return;
+  try {
+    const got = applyStand(await helfer("stand.js?id=" + encodeURIComponent(db.projekt.id)));
+    if (got.n) toast(got.n + " Stellungnahme(n) der Fa. Wahl in die grüne Spalte übernommen.", "ok");
+    if (got.m) toast(got.m + " neue E-Mail(s) in der Korrespondenz.", "ok");
+    if (got.hinweise?.length) toast(got.hinweise.join(" "), "");
+  } catch { /* Der Helfer auf diesem Rechner ist gerade nicht da. Der nächste Durchgang holt sie. */ }
+}
+function startHelfer() {
+  if (READONLY || location.protocol !== "file:") { $("#btn-holen")?.classList.add("hidden"); return; }
+  pollStand();
+  setInterval(pollStand, 20000);
+}
+$("#btn-holen").onclick = async () => {
+  if (READONLY || location.protocol !== "file:") return;
+  if (helferFlight) { toast("Einen Moment, die Übernahme läuft schon.", ""); return; }
+  const btn = $("#btn-holen");
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Hole Stellungnahmen …";
+  try {
+    const data = await helfer("holen.js?id=" + encodeURIComponent(db.projekt.id));
+    if (!data || data.ok === false) throw new Error(data?.fehler || "Übernahme fehlgeschlagen");
+    const got = applyStand(data.stand);
+    toast(got.n ? got.n + " Stellungnahme(n) übernommen." : "Keine neuen Stellungnahmen.", got.n ? "ok" : "");
+    if (data.projekte?.some(p => p.hinweis)) toast(data.projekte.map(p => p.hinweis).filter(Boolean).join(" "), "");
+  } catch (e) {
+    toast("Abruf gerade nicht möglich (" + e.message + "). Neue Einträge werden von selbst nachgezogen, etwa alle fünf Minuten. Danach die Seite neu laden.", "err");
+  } finally { btn.disabled = false; btn.textContent = label; }
+};
+
+$("#btn-mails").onclick = async () => {
+  if (READONLY || location.protocol !== "file:") return;
+  if (helferFlight) { toast("Einen Moment, es läuft schon ein Vorgang.", ""); return; }
+  const btn = $("#btn-mails");
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Hole E-Mails …";
+  helferFlight = true;
+  try {
+    const r = await fetch(HELFER + "mails?id=" + encodeURIComponent(db.projekt.id));
+    const data = await r.json();
+    if (!r.ok || !data || data.ok === false) throw new Error(data?.fehler || "Abruf fehlgeschlagen");
+    const got = applyStand(data.stand);
+    toast(data.anzahl ? data.anzahl + " neue E-Mail(s). Bitte unten in der Korrespondenz in der Spalte „Bauwerk“ zuordnen." : "Keine neuen E-Mails.", data.anzahl || got.m ? "ok" : "");
+    if (got.hinweise?.length) toast(got.hinweise.join(" "), "");
+  } catch (e) {
+    toast("E-Mails gerade nicht abrufbar (" + e.message + ").", "err");
+  } finally { helferFlight = false; btn.disabled = false; btn.textContent = label; }
+};
+
+$("#btn-fertig").onclick = async () => {
+  if (READONLY || location.protocol !== "file:") return;
+  if (helferFlight) { toast("Einen Moment, es läuft schon ein Vorgang.", ""); return; }
+  if (!confirm("Die vorhandene Excel-Datei und die gestempelte Rechnung werden ersetzt. Die Online-Seite wird aktualisiert. Das ist kein Testlauf.")) return;
+  const btn = $("#btn-fertig");
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Schreibe Excel und PDF …";
+  helferFlight = true;
+  try {
+    const payload = structuredClone(db);
+    if (payload.meta) delete payload.meta.lokal_geaendert;
+    const r = await fetch(HELFER + "fertig", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: db.projekt.id, rechnung: currentId, db: payload }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data || data.ok === false) throw new Error(data?.fehler || "Schreiben fehlgeschlagen");
+    if (data.stand) applyStand(data.stand);
+    if (db.meta) db.meta.lokal_geaendert = false;
+    saveLocal();
+    openLocal(data.pdf_url);
+    const dateien = [data.excel, data.pdf].filter(Boolean).join(" und ");
+    toast("Fertig: " + (dateien || "Dateien liegen im Projektordner") + ".", "ok");
+    if (data.hinweis) toast(data.hinweis, "");
+  } catch (e) {
+    toast("Konnte nicht geschrieben werden (" + e.message + ").", "err");
+  }   finally {
+    helferFlight = false;
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+};
+
+$("#btn-test").onclick = async () => {
+  if (READONLY || location.protocol !== "file:") return;
+  if (helferFlight) { toast("Einen Moment, es läuft schon ein Vorgang.", ""); return; }
+  const btn = $("#btn-test");
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Schreibe Probedatei …";
+  helferFlight = true;
+  try {
+    const payload = structuredClone(db);
+    if (payload.meta) delete payload.meta.lokal_geaendert;
+    const r = await fetch(HELFER + "fertig", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: db.projekt.id, rechnung: currentId, db: payload, test: true }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data || data.ok === false) throw new Error(data?.fehler || "Testlauf fehlgeschlagen");
+    openLocal(data.pdf_url);
+    toast("Probedatei geöffnet. Die echte Rechnung und die Online-Seite sind unverändert.", "ok");
+  } catch (e) {
+    toast("Testlauf nicht möglich (" + e.message + ").", "err");
+  } finally {
+    helferFlight = false;
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+};
+
 $("#btn-protokoll").onclick = () => {
   const url = window.AUDIT_SEED?.meta?.protokoll_url || db.meta?.protokoll_url;
   if (url) window.open(url, "_blank", "noopener");
@@ -1724,6 +2369,15 @@ $("#dlg-sync").addEventListener("close", async () => {
     else if (v === "push") await Remote.push();
     else toast("Einstellungen gespeichert.", "ok");
   } catch (err) { toast(err.message, "err"); }
+});
+
+$("#honorar").addEventListener("change", e => {
+  const id = e.target.dataset.honorarPaid;
+  if (!id) return;
+  const marks = honorarMarks();
+  marks[id] = { bezahlt: e.target.checked, am: e.target.checked ? todayIso() : "" };
+  localStorage.setItem(HONORAR_MARKS, JSON.stringify(marks));
+  renderHonorar();
 });
 
 window.addEventListener("beforeunload", () => { if (dirty) saveLocal(); });
