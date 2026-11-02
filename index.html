@@ -632,8 +632,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261102224558" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261102224558" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261102225423" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261102225423" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -831,7 +831,14 @@ function mergeStellungnahmen(target, source, log) {
 async function init() {
   const seed = await loadSeed();
   const local = IS_AG ? null : safeParse(localStorage.getItem(STORE_KEY));
-  if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
+  /* Der Ordner-Stand kann den Browser-Stand per meta.browser_reset_id einmalig ersetzen (nur Prüfer-Ansicht, nicht Elektriker/Bauherr).
+     Der alte Browser-Stand bleibt als Sicherung im Browser. */
+  const resetId = seed?.meta?.browser_reset_id;
+  if (local && seed && resetId && !IS_AN && !IS_AG && local.meta?.browser_reset_id !== resetId) {
+    try { localStorage.setItem(STORE_KEY + ".sicherung", JSON.stringify(local)); } catch { /* Platz knapp */ }
+    adoptSeed(seed, true);
+    setTimeout(() => toast("Stand aus dem Projektordner geladen.", "ok"), 0);
+  } else if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
     const merged = structuredClone(seed);
     merged.historie = local.historie || [];
     for (const r of merged.rechnungen) {
