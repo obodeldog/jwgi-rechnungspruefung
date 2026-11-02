@@ -149,6 +149,12 @@
   td.txt { min-width: 260px; max-width: 340px; }
   td.txt .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 0 6px; border-radius: 4px; margin-right: 4px; vertical-align: 1px; }
   .tag.nt { background: var(--nt); color: #9a4a10; } .tag.bed { background: #e8eaf6; color: #3949ab; }
+  /* Neu bzw. geändert gegenüber der vorherigen (kumulierten) Rechnung */
+  .tag.neutr { background: #0b6bcb; color: #fff; } .tag.neutr.mehr { background: #e37400; } .tag.neutr.minder { background: #6b7280; }
+  tr.neu-pos td.oz { box-shadow: inset 5px 0 0 #0b6bcb; }
+  .chip.neu { border-color: #0b6bcb; color: #0b6bcb; } .chip.neu.active { background: #0b6bcb; border-color: #0b6bcb; color: #fff; }
+  .small.neu-d { color: #0b6bcb; font-weight: 600; white-space: nowrap; }
+  .neu-sum { font-size: 12px; font-weight: 700; color: #0b6bcb; }
   td.pr { background: var(--input); }
   td.wahl { background: var(--wahl); min-width: 260px; }
   td.kom { min-width: 300px; }
@@ -281,6 +287,10 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   .ang td.oz { border-left: 4px solid #b8c0cc; font-weight: 700; white-space: nowrap; }
   .ang tr.alt td { color: var(--muted); }
   .ang .ers, td .ers { color: #8a4b00; margin-top: 3px; }
+  .stn-info { font-size: 11px; color: #3b7a3b; margin-top: 3px; cursor: help; }
+  .teil-frei { display: inline-block; margin-top: 4px; padding: 2px 6px; border-radius: 4px;
+               background: #fff3cd; color: #7a5200; font-weight: 700; font-size: 11.5px;
+               border: 1px solid #f5c542; white-space: nowrap; }
   tr.lv-offen td { color: #b7bdc7; background: #f7f8fa; }
   tr.lv-offen td.oz { border-left-color: #eceff3; font-weight: 500; }
   tr.lv-offen .ers { color: #8a4b00; }
@@ -364,6 +374,7 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   <div class="toolbar no-print">
     <div class="tool pruefer-only"><button class="btn send" id="btn-holen">Stellungnahmen holen</button><small>Neue Antworten der Fa. Wahl in die grüne Spalte. Das passiert sonst von selbst.</small></div>
     <div class="tool pruefer-only"><button class="btn primary" id="btn-fertig">Excel und Prüf-PDF</button><small>Ersetzt die Excel-Datei und die gestempelte Rechnung im Ordner. Kein Testlauf.</small></div>
+    <div class="tool pruefer-only"><button class="btn" id="btn-pdf-open">📄 Geprüfte Rechnung (PDF)</button><small>Öffnet die gestempelte Rechnung mit Prüfvermerk aus dem Projektordner, die gerade gewählte Rechnung.</small></div>
     <div class="tool pruefer-only"><button class="btn" id="btn-test">Testlauf</button><small>Probedatei zum Ansehen. Die echte Rechnung und die Online-Seite bleiben unverändert.</small></div>
     <div class="tool pruefer-only"><button class="btn" id="btn-mails">E-Mails holen</button><small>Holt neue Projekt-Mails in die Korrespondenz von Altbau und Neubau. Nur wenn Sie klicken.</small></div>
     <div class="tool pruefer-only"><button class="btn" id="btn-edit">✎ Rechnungsdaten bearbeiten</button><small>Kopf der Rechnung: Datum, Nummer, Skonto, Abgebot.</small></div>
@@ -590,6 +601,11 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
         <label>Stand / Zusammenfassung<input name="stand"></label>
         <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-top:18px"><input type="checkbox" name="offen"> noch offen / strittig</label>
       </div>
+      <div id="akte-thema-status" class="grid2" style="display:none">
+        <label>Status des Nachtrags / Klärungspunkts
+          <select name="thema_status"></select>
+        </label>
+      </div>
       <label id="akte-prognose">Auswirkung auf die Schlusssumme dieses Bauabschnitts (netto vor Abgebot, € – Minderung negativ, leer = nicht beziffert)
         <input name="prognose" inputmode="decimal"></label>
     </fieldset>
@@ -616,8 +632,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261021161615" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261021161615" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261102205548" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261102205548" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -693,6 +709,28 @@ function priorQty(i) {
     }
   }
   return cum;
+}
+
+/** Was ist gegenüber der vorherigen Rechnung dazugekommen? Nur bei kumulierter Abrechnung (jede Rechnung zeigt den Gesamtstand). */
+function vorherigeRechnung(i) {
+  const k = db.rechnungen.findIndex(r => r.id === i.id);
+  return k > 0 && i.abrechnungsart === "kumuliert" ? db.rechnungen[k - 1] : null;
+}
+function neuInfo(i, p) {
+  const prev = vorherigeRechnung(i); if (!prev) return null;
+  const alt = (prev.positionen || []).find(x => x.oz === p.oz);
+  const m = Number(p.menge) || 0;
+  if (!alt) return m ? { typ: "neu", delta: m, vorher: 0, kurz: prev.kurz } : null;
+  const d = r2(m - (Number(alt.menge) || 0));
+  if (Math.abs(d) < 1e-9) return null;
+  return { typ: d > 0 ? "mehr" : "minder", delta: d, vorher: Number(alt.menge) || 0, kurz: prev.kurz };
+}
+function neuZusammenfassung(i) {
+  const prev = vorherigeRechnung(i); if (!prev) return null;
+  const n = { neu: 0, mehr: 0, minder: 0 };
+  for (const p of i.positionen) { const x = neuInfo(i, p); if (x) n[x.typ]++; }
+  const g = l => l.reduce((a, p) => a + betrag(p, true), 0);
+  return { ...n, kurz: prev.kurz, zuwachs: r2(g(i.positionen) - g(prev.positionen)), zuwachsGefordert: r2(i.positionen.reduce((a, p) => a + betrag(p, false), 0) - prev.positionen.reduce((a, p) => a + betrag(p, false), 0)) };
 }
 
 function pctLv(i, p, prior) {
@@ -801,7 +839,7 @@ async function init() {
       if (lr?.stellungnahme_an_abgeschlossen) r.stellungnahme_an_abgeschlossen = lr.stellungnahme_an_abgeschlossen;
     }
     mergeStellungnahmen(merged, local, false);
-    merged.meta.seed_generiert_am = seed.meta.generiert_am;
+    merged.meta.seed_generiert_am = seed.meta.generiert_am; merged.meta.seed_sig = seedSig(seed);
     db = merged; saveLocal();
   } else if (local && local.schema_version === SCHEMA_VERSION) {
     db = local;
@@ -810,14 +848,34 @@ async function init() {
     if (newer && !local.meta?.lokal_geaendert) {
       adoptSeed(seed, true);
       setTimeout(() => toast("Aktueller Stand geladen (inkl. neuer Stellungnahmen der Fa. Wahl).", "ok"), 0);
-    } else if (newer && addNewFromSeed(seed)) {
-      db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal();
     } else if (newer) {
-      banner(`Neuerer Stand vorhanden (${esc(seed.meta.generiert_am.replace("T", " "))}), z. B. mit neuen Stellungnahmen der Fa. Wahl.
-        Sie haben im Browser noch <b>Änderungen, die nicht exportiert wurden</b>. „Stellungnahmen holen“ übernimmt nur die grüne Spalte.
-        „Datenbasis übernehmen“ ersetzt den Browser-Stand durch die Datei.`, "", [
-        ["Datenbasis übernehmen", () => { adoptSeed(seed); }],
-        ["Browser-Stand behalten", () => { db.meta.seed_generiert_am = seed.meta.generiert_am; saveLocal(); }]]);
+      /* Mails und deren Zuordnung gehören dem Helfer und werden immer aus der Datei übernommen, ohne zu fragen. */
+      const korrSig = () => JSON.stringify((db.korrespondenz || []).map(k => [mailKey(k), !!k.zuordnung_offen]));
+      const sigNow = seedSig(seed), sigOld = local.meta?.seed_sig;
+      const geaendert = sigOld ? SIG_KEYS.filter(k => sigNow[k] !== sigOld[k]) : null;
+      const vor = korrSig();
+      const neues = addNewFromSeed(seed);
+      const korr = korrSig() !== vor;
+      /* Gleicher Inhalt wie im Browser, oder seit der letzten Übernahme hat sich in der Datei nichts Relevantes geändert,
+         oder (ältere Browser-Stände ohne Merkzeichen) es kam nur Neues dazu: dann gibt es nichts zu entscheiden. */
+      const gleich = SIG_KEYS.every(k => JSON.stringify(seed[k] ?? null) === JSON.stringify(db[k] ?? null));
+      if (gleich || (geaendert && !geaendert.length) || (!sigOld && (neues || korr))) {
+        markSeed(seed); saveLocal();
+        if (!neues && korr) setTimeout(() => toast("Mail-Zuordnung aus dem Projektordner übernommen. Ihre Eingaben sind unverändert.", "ok"), 0);
+      } else {
+        const stand = deDT(seed.meta.generiert_am);
+        const was = { rechnungen: "Rechnungspositionen", akte: "Positionsakten (Verlauf)", rapporte: "Regieberichte" };
+        banner(`<b>Im Projektordner liegen neuere Daten</b> (Stand ${esc(stand)})${geaendert?.length ? `, geändert: ${geaendert.map(k => was[k]).join(", ")}` : ""}.
+          Sie haben im Browser aber Änderungen, die noch nicht über „Excel und Prüf-PDF“ in den Ordner geschrieben wurden. Was soll gelten?<br>
+          • <b>Meine Änderungen behalten</b>: Ihr Browser-Stand bleibt, wie er ist. Neue Mails, Nachträge und Stellungnahmen sind schon übernommen. Das ist fast immer richtig.<br>
+          • <b>Stand aus dem Ordner laden</b>: ersetzt alles im Browser durch den Ordner-Stand. Ihre noch nicht übernommenen Änderungen gehen verloren
+          (eine Sicherungskopie bleibt im Browser).`, "", [
+          ["Meine Änderungen behalten", () => { markSeed(seed); saveLocal(); }],
+          ["Stand aus dem Ordner laden", () => {
+            try { localStorage.setItem(STORE_KEY + ".sicherung", JSON.stringify(db)); } catch { /* Platz knapp, dann ohne Sicherung */ }
+            adoptSeed(seed);
+          }]]);
+      }
     }
   } else if (seed) {
     adoptSeed(seed, true);
@@ -871,9 +929,17 @@ function addNewFromSeed(seed) {
   return neu.length > 0;
 }
 
+/* Merkzeichen, welcher Ordner-Stand zuletzt übernommen wurde: Zeitstempel plus Kurzprüfsumme der Teile, die Sie im Browser bearbeiten. */
+const SIG_KEYS = ["rechnungen", "akte", "rapporte"];
+function seedSig(s) {
+  const h = str => { let x = 5381; for (let i = 0; i < str.length; i++) x = ((x << 5) + x + str.charCodeAt(i)) | 0; return x >>> 0; };
+  return Object.fromEntries(SIG_KEYS.map(k => [k, h(JSON.stringify(s[k] ?? null))]));
+}
+function markSeed(s) { db.meta.seed_generiert_am = s.meta.generiert_am; db.meta.seed_sig = seedSig(s); }
+
 function adoptSeed(seed, silent) {
   db = structuredClone(seed);
-  db.meta.seed_generiert_am = seed.meta.generiert_am;
+  markSeed(seed);
   saveLocal();
   if (!silent) { currentId = db.rechnungen[db.rechnungen.length - 1]?.id; renderAll(); toast("Datenbasis aus audit_data.js übernommen.", "ok"); }
 }
@@ -1317,10 +1383,13 @@ function renderFilters() {
   const i = inv(), c = countStatus(i.positionen);
   const chip = (s, label, n) => `<button class="chip ${s} ${ui.status === s ? "active" : ""}" data-status="${s}">${label} (${n})</button>`;
   const rf = i.positionen.filter(needsAnswer), rfOpen = rf.filter(p => !hasAnswer(p)).length;
+  const nz = neuZusammenfassung(i), nNeu = nz ? nz.neu + nz.mehr + nz.minder : 0;
   $("#filters").innerHTML = (IS_AN ? chip("rueckfrage", `Rückfragen offen`, rfOpen) : "") +
+    (nz ? chip("neu", `Neu in ${esc(i.kurz)}`, nNeu) : "") +
     chip("alle", "Alle", i.positionen.length) + chip("gruen", "Grün", c.gruen) + chip("gelb", "Gelb", c.gelb) +
     chip("rot", "Rot", c.rot) + (c[""] ? chip("offen", "offen", c[""]) : "") +
     (READONLY ? "" : chip("beantwortet", "mit Stellungnahme", i.positionen.filter(hasAnswer).length)) +
+    (nz ? `<span class="neu-sum" title="Gegenüber ${esc(nz.kurz)}: geprüfter Netto-Zuwachs vor Abgebot (gefordert: ${signed(nz.zuwachsGefordert)})">Neu ggü. ${esc(nz.kurz)}: ${nz.neu} Pos. neu, ${nz.mehr} mit Mehrmenge${nz.minder ? `, ${nz.minder} mit Minderung` : ""} · Zuwachs geprüft ${signed(nz.zuwachs)}</span>` : "") +
     `<span style="font-size:12px;color:var(--wahl-head);font-weight:700">Stellungnahmen: ${rf.length - rfOpen} / ${rf.length} Rückfragen beantwortet</span>` +
     `<select id="f-block"><option value="alle">Alle Blöcke</option>${blocksOf(i).map(b => `<option value="${b.id}" ${ui.block === b.id ? "selected" : ""}>${esc(b.titel)}</option>`).join("")}</select>
      <input type="search" id="f-search" placeholder="Suche OZ, Text, Vermerk, Stellungnahme …" value="${esc(ui.search)}">
@@ -1333,6 +1402,7 @@ function renderFilters() {
 function visible(p) {
   if (ui.status === "rueckfrage") { if (!needsAnswer(p) || hasAnswer(p)) return false; }
   else if (ui.status === "beantwortet") { if (!hasAnswer(p)) return false; }
+  else if (ui.status === "neu") { if (!neuInfo(inv(), p)) return false; }
   else if (ui.status !== "alle" && (ui.status === "offen" ? (p.status || "") !== "" : p.status !== ui.status)) return false;
   if (ui.block !== "alle" && p.block !== ui.block) return false;
   if (ui.search) {
@@ -1458,12 +1528,15 @@ function rowHtml(i, p, n, lvm, prior) {
   const dis = READONLY ? " disabled" : "";
   const epWarn = lv.typ && lv.typ !== "Nachtrag" && r2(p.pruef_ep) !== r2(lv.ep) ? ` <span class="warn-ic" title="Prüf-EP weicht vom LV-EP ${fmt(lv.ep)} € ab">≠LV</span>` : "";
   const rfWarn = p.betrag_rechnung != null && r2(p.betrag_rechnung) !== betrag(p, false) ? ` <span class="warn-ic" title="lt. Rechnung ${eur(p.betrag_rechnung)} – Rechenfehler">!</span>` : "";
-  return `<tr class="st-${st || "offen"}" data-i="${n}">
+  const ni = neuInfo(i, p);
+  const neuTag = !ni ? "" : `<span class="tag neutr ${ni.typ}" title="gegenüber ${esc(ni.kurz)}">${ni.typ === "neu" ? "NEU" : ni.typ === "mehr" ? "MEHR" : "WENIGER"} in ${esc(i.kurz)}</span>`;
+  const neuDelta = !ni ? "" : `<div class="small neu-d">${esc(ni.kurz)}: ${fmt(ni.vorher)} → ${ni.delta > 0 ? "+" : ""}${fmt(ni.delta)}</div>`;
+  return `<tr class="st-${st || "offen"}${ni ? " neu-pos" : ""}" data-i="${n}">
     <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
-    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${tag}${esc(p.kurztext)}`}${ersatzHtml(p.oz, lv.menge != null ? lv.menge : p.lv_menge, p.einheit || lv.einheit)}</td>
+    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${neuTag}${tag}${esc(p.kurztext)}`}${ersatzHtml(p.oz, lv.menge != null ? lv.menge : p.lv_menge, p.einheit || lv.einheit)}</td>
     <td class="num">${lvMengeZelle(p.lv_menge != null ? p.lv_menge : lv.menge, p.oz, p.einheit || lv.einheit)}</td>
     <td class="c">${esc(p.einheit)}</td>
-    <td class="num">${ui.edit ? numIn("menge") : fmt(p.menge)}</td>
+    <td class="num">${ui.edit ? numIn("menge") : fmt(p.menge)}${neuDelta}</td>
     <td class="num">${ui.edit ? numIn("ep") : eur(p.ep)}</td>
     <td class="num c-g">${eur(betrag(p, false))}${rfWarn}</td>
     <td class="num pr">${numIn("pruef_menge")}</td>
@@ -1477,9 +1550,18 @@ function rowHtml(i, p, n, lvm, prior) {
       ${["", "A", "B", "C"].map(s => `<option value="${s}" ${s === (p.kategorie || "") ? "selected" : ""}>${s || "–"}</option>`).join("")}</select></td>
     <td class="kom">${ta("kommentar", "Prüfvermerk …", READONLY)}${READONLY ? "" :
       `<input class="hint no-print" data-i="${n}" data-f="pdf_hinweis" value="${esc(p.pdf_hinweis || "")}" placeholder="PDF-Stempel-Kurzhinweis (leer = automatisch)" title="Kurzhinweis im gestempelten Rechnungs-PDF. Platzhalter: {mehrmenge} {pruef_ep} {pruef_betrag} {diff}">`}</td>
-    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …", IS_AG)}</td>
+    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …", IS_AG)}${stnInfo(p)}</td>
     ${ui.edit ? `<td class="c"><button class="del" data-act="del" data-i="${n}" title="Position löschen">🗑</button></td>` : ""}
   </tr>`;
+}
+
+/** Datum der letzten Stellungnahme der Fa. Wahl zu dieser Position, bei Änderungen mit Verlauf (Mouseover und Klick auf 💬). */
+function stnInfo(p) {
+  const e = ((db.akte || {})[p.oz]?.eintraege || []).filter(x => x.rolle === "AN" && x.art === "Stellungnahme" && !(READONLY && IS_AN && x.nur_ag));
+  if (!e.length || !(p.stellungnahme_an || "").trim()) return "";
+  const last = e[e.length - 1];
+  const verlauf = e.map(x => `${deDT(x.datum)}${x.von ? " · " + x.von : ""}: ${x.text}`).join("\n\n");
+  return `<div class="stn-info no-print" title="${esc((e.length > 1 ? "Frühere Fassungen:\n\n" : "") + verlauf)}">Stand ${esc(deDT(last.datum))}${e.length > 1 ? ` · ${e.length - 1}× geändert` : ""}</div>`;
 }
 
 function refreshComputed() {
@@ -1584,11 +1666,13 @@ function rapportHtml() {
 const zaehlt = p => !p.alternativ;
 const angenommen = p => zaehlt(p) && (p.status === "gruen" || p.status === "gelb");
 function entfallBetrag(e) { const ep = lvMap()[e.oz]?.ep; return e.menge == null || ep == null ? 0 : r2(e.menge * ep); }
+/* Freigegebener Betrag einer Position: bei teilweiser Freigabe freigegebene Menge × EP, sonst der angebotene Gesamtpreis. */
+const freiBetrag = p => p.menge_frei != null && p.menge_frei !== "" ? r2(Number(p.menge_frei) * (Number(p.ep) || 0)) : (Number(p.gp) || 0);
 function angebotRechnen(t) {
   const list = t.angebot_pos || [];
-  const sum = f => r2(list.filter(f).reduce((a, p) => a + (Number(p.gp) || 0), 0));
+  const sum = (f, w = p => Number(p.gp) || 0) => r2(list.filter(f).reduce((a, p) => a + w(p), 0));
   const entfall = r2(list.filter(angenommen).flatMap(p => p.ersetzt || []).reduce((a, e) => a + entfallBetrag(e), 0));
-  const gruen = sum(p => zaehlt(p) && p.status === "gruen"), gelb = sum(p => zaehlt(p) && p.status === "gelb");
+  const gruen = sum(p => zaehlt(p) && p.status === "gruen", freiBetrag), gelb = sum(p => zaehlt(p) && p.status === "gelb", freiBetrag);
   return { angebot: sum(zaehlt), gruen, gelb, entfall, mehr: r2(gruen + gelb - entfall) };
 }
 function angebotHtml(t) {
@@ -1598,9 +1682,14 @@ function angebotHtml(t) {
     + `${lv[e.oz]?.ep != null ? ` à ${eur(lv[e.oz].ep)}` : ""}${e.hinweis ? ` (${esc(e.hinweis)})` : ""}`).join("<br>");
   const art = p => p.alternativ ? "Alternative" : p.ersetzt?.length ? "Ersatz für LV" : "Zusatz zum LV";
   const rows = t.angebot_pos.map((p, i) => { const st = p.status || "";
-    return `<tr class="st-${st || "offen"}${p.alternativ ? " alt" : ""}"><td class="oz">${esc(p.pos)}</td><td class="num">${fmt(p.menge)} ${esc(p.einheit || "")}</td>
+    const teil = p.menge_frei != null && p.menge_frei !== "";
+    const freiZelle = p.alternativ ? "" : edit
+      ? `<div class="small ers">freigegeben: <input class="n" style="width:58px" data-ap="${i}" data-apf="menge_frei" inputmode="decimal" value="${teil ? fmt(p.menge_frei) : ""}" placeholder="${fmt(p.menge)}" title="Nur ausfüllen, wenn weniger als angeboten freigegeben wird. Leer = alles."></div>`
+      : teil ? `<div><span class="teil-frei">nur ${fmt(p.menge_frei)} von ${fmt(p.menge)} ${esc(p.einheit || "Stk")} freigegeben</span></div>` : "";
+    const gpFrei = !p.alternativ && teil ? `<div><span class="teil-frei">freigegeben: ${eur(freiBetrag(p))}</span></div>` : "";
+    return `<tr class="st-${st || "offen"}${p.alternativ ? " alt" : ""}"><td class="oz">${esc(p.pos)}</td><td class="num">${fmt(p.menge)} ${esc(p.einheit || "")}${freiZelle}</td>
       <td>${esc(p.text)}${p.ersetzt?.length ? `<div class="small ers">${ersetzt(p)}</div>` : ""}</td>
-      <td class="num">${eur(p.ep)}</td><td class="num">${p.alternativ ? `(${eur(p.gp)})` : eur(p.gp)}</td><td>${art(p)}</td>
+      <td class="num">${eur(p.ep)}</td><td class="num">${p.alternativ ? `(${eur(p.gp)})` : eur(p.gp)}${gpFrei}</td><td>${art(p)}</td>
       <td class="c">${edit ? `<select class="amp ${st || "offen"}" data-ap="${i}" data-apf="status">${["gruen", "gelb", "rot", ""].map(v => `<option value="${v}" ${v === st ? "selected" : ""}>${AMPEL[v]}</option>`).join("")}</select>`
         : `<span class="dot ${st || "offen"}">${AMPEL[st]}</span>`}</td>
       <td>${edit ? `<textarea rows="3" data-ap="${i}" data-apf="kommentar" placeholder="Prüfvermerk …">${esc(p.kommentar || "")}</textarea>
@@ -1648,9 +1737,20 @@ $("#akte-body").addEventListener("change", e => {
   const el = e.target.closest("[data-ap]"); if (!el || READONLY || akteCtx?.kind !== "thema") return;
   const t = (db.themen || []).find(x => x.id === akteCtx.key), p = t?.angebot_pos?.[+el.dataset.ap]; if (!p) return;
   const f = el.dataset.apf, alt = p[f] ?? "";
-  if (String(alt) === el.value) return;
-  p[f] = el.value;
-  logChange("", `${t.id} Angebot Pos. ${p.pos} ${f === "status" ? "Ampel" : f === "pdf_hinweis" ? "PDF-Hinweis" : "Prüfvermerk"}`, f === "status" ? AMPEL[alt] : alt, f === "status" ? AMPEL[el.value] : el.value);
+  if (f === "menge_frei") {
+    const roh = el.value.trim(), v = roh === "" ? null : parseNum(roh);
+    if (v != null && (Number.isNaN(v) || v < 0 || v > Number(p.menge))) {
+      toast(`Freigegebene Menge zwischen 0 und ${fmt(p.menge)} eingeben, oder leer lassen.`, "err");
+      el.value = alt === "" ? "" : fmt(alt); return;
+    }
+    if ((v ?? null) === (alt === "" ? null : Number(alt))) return;
+    logChange("", `${t.id} Angebot Pos. ${p.pos} freigegebene Menge`, alt === "" ? p.menge : alt, v ?? p.menge);
+    if (v == null) delete p.menge_frei; else p.menge_frei = v;
+  } else {
+    if (String(alt) === el.value) return;
+    p[f] = el.value;
+    logChange("", `${t.id} Angebot Pos. ${p.pos} ${f === "status" ? "Ampel" : f === "pdf_hinweis" ? "PDF-Hinweis" : "Prüfvermerk"}`, f === "status" ? AMPEL[alt] : alt, f === "status" ? AMPEL[el.value] : el.value);
+  }
   angebotUebernehmen(t); touch(); renderAll();
   $("#ang-box").outerHTML = angebotHtml(t);
   $("#form-akte").prognose.value = fmt(t.prognose_netto);
@@ -1684,9 +1784,21 @@ function openAkte(kind, key) {
   const th = kind === "thema" ? (db.themen || []).find(x => x.id === key) : null;
   $("#akte-prognose").classList.toggle("hidden", !th);
   f.prognose.value = th?.prognose_netto != null ? fmt(th.prognose_netto) : "";
+  $("#akte-thema-status").style.display = th ? "" : "none";
+  const STATI = ["zur Prüfung", "geprüft – Empfehlung an Bauherrn", "teilweise freigegeben – Beauftragung durch Bauherrn",
+    "freigegeben – Beauftragung durch Bauherrn", "nicht freigegeben", "zurückgezogen", "überholt", "geklärt"];
+  const aktuell = th?.status || "";
+  f.thema_status.innerHTML = [...(aktuell && !STATI.includes(aktuell) ? [aktuell] : []), ...STATI]
+    .map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  f.thema_status.value = aktuell || "zur Prüfung";
   $("#dlg-akte").returnValue = "";
   $("#dlg-akte").showModal();
 }
+$("#form-akte").thema_status.addEventListener("change", e => {
+  const s = e.target.value, f = $("#form-akte");
+  if (/^(freigegeben|nicht freigegeben|zurückgezogen|überholt|geklärt)/.test(s)) f.offen.checked = false;
+  else if (/^(zur Prüfung|geprüft)/.test(s)) f.offen.checked = true;
+});
 $("#dlg-akte").addEventListener("click", e => {
   const a = e.target.closest("[data-thema]"); if (!a) return;
   e.preventDefault(); $("#dlg-akte").close(); openAkte("thema", a.dataset.thema);
@@ -1714,9 +1826,14 @@ $("#dlg-akte").addEventListener("close", () => {
       logChange("", "Prognose " + key, target.prognose_netto ?? "", v ?? "");
       if (v == null) delete target.prognose_netto; else target.prognose_netto = r2(v);
     }
+    const newStatus = f.thema_status.value.trim();
+    if (newStatus && newStatus !== (target.status || "")) {
+      logChange("", "Status " + key, target.status || "", newStatus);
+      target.status = newStatus;
+    }
   }
   touch(); renderAll();
-  setTimeout(() => openAkte(kind, key), 0);
+  toast("Gespeichert ✓", "ok");
 });
 
 function renderThemen() {
@@ -2225,6 +2342,16 @@ $("#btn-fertig").onclick = async () => {
     btn.disabled = false;
     btn.textContent = label;
   }
+};
+
+/* Die gestempelte Rechnung liegt im Projektordner: <Name der Original-PDF>_pruefvermerk.pdf */
+$("#btn-pdf-open").onclick = () => {
+  if (READONLY) return;
+  const i = inv();
+  const basis = String(i?.pdf_original || "").split(/[\\/]/).pop().replace(/\.pdf$/i, "");
+  if (!basis) { toast("Für diese Rechnung ist keine Original-PDF hinterlegt.", "err"); return; }
+  if (location.protocol !== "file:") { toast("Das PDF lässt sich nur öffnen, wenn das Dashboard aus dem Projektordner gestartet wurde.", "err"); return; }
+  openLocal(encodeURI(basis + "_pruefvermerk.pdf"));
 };
 
 $("#btn-test").onclick = async () => {
