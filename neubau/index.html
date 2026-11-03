@@ -300,6 +300,11 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   tr.lv-offen td.oz { border-left-color: #eceff3; font-weight: 500; }
   tr.lv-offen .ers { color: #8a4b00; }
   tr.lv-offen:hover td { background: #f1f3f6; color: #8b93a0; }
+  tr.lv-entfallen td { color: #7a4a4a; background: #fbf1f1; }
+  tr.lv-entfallen td.oz { border-left-color: #c0392b; font-weight: 700; }
+  tr.lv-entfallen:hover td { background: #f7e6e6; color: #5c3030; }
+  .entf-txt { text-decoration: line-through; }
+  .entf-tag { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 3px; background: #c0392b; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .3px; }
   .ang textarea { width: 100%; min-width: 220px; font: inherit; font-size: 12.5px; }
   .ang-sum { margin: 8px 0 4px; font-size: 13px; line-height: 1.6; }
   .ang input.hint { width: 100%; margin-top: 3px; font-size: 11.5px; }
@@ -637,8 +642,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261103193640" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261103193640" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261103200042" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261103200042" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -1287,7 +1292,11 @@ function kostenStand(i) {
     });
   const mehrThemen = r2(themen.reduce((a, x) => a + x.wert, 0));
   const offenOhne = (db.themen || []).filter(t => !isHidden(t) && t.offen && t.prognose_netto == null && /Nachtrag|Mehrung|Hinweis/i.test(t.typ || ""));
-  const prognose = r2(auftrag + mehrPos + mehrThemen);
+  /* LV-Positionen, die ohne Nachtrag entfallen (z. B. SLS-Schalter, ersetzt durch Lasttrenner): Minderung wird gegengerechnet */
+  const entfallPos = (db.lv?.positionen || []).filter(p => p.entfallen && !((cumP[p.oz] || 0) > 0))
+    .map(p => ({ oz: p.oz, kurztext: p.kurztext || "", wert: lvWert(p.oz) }));
+  const entfallSumme = r2(entfallPos.reduce((a, x) => a + x.wert, 0));
+  const prognose = r2(auftrag + mehrPos + mehrThemen - entfallSumme);
   const ls = Number(i.leistungsstand_pct) || 0;
   const hoch = ls > 0 ? r2(sum(cumP) / (ls / 100)) : null;
   const massgebend = Math.max(prognose, hoch || 0);
@@ -1301,7 +1310,7 @@ function kostenStand(i) {
     return { oz, kurztext: p.kurztext || lvm[oz]?.kurztext || "", ohneLv: !lvm[oz] || p.block === "NT", mehr: ueber(oz), grund,
       ursache: URSACHEN[p.ursache] ? p.ursache : "offen" };
   }).sort((a, b) => b.mehr - a.mehr);
-  return { auftrag, abgG: sum(cumG), abgP: sum(cumP), mehrPos, zusatz, themen, mehrThemen, offenOhne, prognose, ls, hoch, abw, ampel };
+  return { auftrag, abgG: sum(cumG), abgP: sum(cumP), mehrPos, zusatz, themen, mehrThemen, offenOhne, entfallPos, entfallSumme, prognose, ls, hoch, abw, ampel };
 }
 
 const URSACHEN = {
@@ -1353,11 +1362,12 @@ function renderKosten() {
         <tr><td>+ bereits abgerechnete Mehrungen (siehe oben)</td><td class="v">${signed(k.mehrPos)}</td></tr>
         ${k.themen.map(x => `<tr><td>+ ${esc(x.t.id)} ${esc(x.t.titel)} <span style="color:var(--muted)">(${esc(x.t.status || "")})</span>${x.t.veranlassung ? `<div class="veranl">Veranlassung: ${esc(x.t.veranlassung)}</div>` : ""}</td><td class="v">${signed(x.wert)}</td></tr>`).join("")}
         ${k.offenOhne.map(t => `<tr><td>+ ${esc(t.id)} ${esc(t.titel)} – <b>Betrag noch unbekannt, mit 0 € enthalten</b></td><td class="v">?</td></tr>`).join("")}
+        ${k.entfallPos.map(x => `<tr><td>− ${esc(x.oz)} ${esc(x.kurztext)} <span style="color:var(--muted)">(entfällt, nicht abzurechnen)</span></td><td class="v">${signed(-x.wert)}</td></tr>`).join("")}
         <tr><td><b>= Prognose</b></td><td class="v"><b>${eur(k.prognose)}</b></td></tr>
         ${k.hoch != null ? `<tr><td>Hochrechnung über Leistungsstand (${fmt(k.ls, 0)} % fertig): abgerechnet ÷ Leistungsstand</td><td class="v">${eur(k.hoch)}</td></tr>` : ""}
       </table>
       <p style="color:var(--muted);margin:6px 0 0">Noch nicht abgerechnete LV-Positionen sind mit ihrer LV-Menge angesetzt; Minderungen werden erst bei
-      Abrechnung wirksam. Ampel: bis +${KOSTEN_GELB} % grün, bis +${KOSTEN_ROT} % gelb, darüber rot.
+      Abrechnung wirksam, außer die Position ist im LV als „entfällt“ vermerkt. Ampel: bis +${KOSTEN_GELB} % grün, bis +${KOSTEN_ROT} % gelb, darüber rot.
       ${READONLY ? "" : "Leistungsstand unter „✎ Rechnungsdaten bearbeiten“, Beträge je Thema im Themen-Dialog (💬)."}</p>
     </details>` : ""}`;
 }
@@ -1466,15 +1476,16 @@ function blockFuerLv(p) {
   return "LV";
 }
 function lvZeileHtml(p) {
-  return `<tr class="lv-offen">
+  const weg = !!p.entfallen;
+  return `<tr class="lv-offen${weg ? " lv-entfallen" : ""}">
     <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
-    <td class="txt">${esc(p.kurztext || "")}${ersatzHtml(p.oz, p.menge, p.einheit)}${p.vermerk ? `<div class="small" style="color:#8a4b00">Hinweis: ${esc(p.vermerk)}</div>` : ""}</td>
-    <td class="num">${lvMengeZelle(p.menge, p.oz, p.einheit)}</td>
+    <td class="txt">${weg ? `<span class="entf-tag">ENTFÄLLT</span><span class="entf-txt">${esc(p.kurztext || "")}</span>` : esc(p.kurztext || "")}${ersatzHtml(p.oz, p.menge, p.einheit)}${p.vermerk ? `<div class="small" style="color:#8a4b00">${weg ? "" : "Hinweis: "}${esc(p.vermerk)}</div>` : ""}</td>
+    <td class="num">${weg ? `<span class="entf-txt">${fmt(p.menge)}</span>` : lvMengeZelle(p.menge, p.oz, p.einheit)}</td>
     <td class="c">${esc(p.einheit || "")}</td>
     <td class="num">–</td><td class="num">${p.ep != null ? eur(p.ep) : "–"}</td><td class="num">–</td>
     <td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td>
     <td class="c">–</td><td class="c">–</td>
-    <td>noch nicht abgerechnet</td><td></td>${ui.edit ? "<td></td>" : ""}
+    <td>${weg ? "<b>entfallen</b>, nicht abzurechnen" : "noch nicht abgerechnet"}</td><td></td>${ui.edit ? "<td></td>" : ""}
   </tr>`;
 }
 
