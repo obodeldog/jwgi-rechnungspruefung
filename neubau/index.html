@@ -632,8 +632,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261102211814" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261102211814" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261103171712" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261103171712" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -831,7 +831,14 @@ function mergeStellungnahmen(target, source, log) {
 async function init() {
   const seed = await loadSeed();
   const local = IS_AG ? null : safeParse(localStorage.getItem(STORE_KEY));
-  if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
+  /* Der Ordner-Stand kann den Browser-Stand per meta.browser_reset_id einmalig ersetzen (nur Prüfer-Ansicht, nicht Elektriker/Bauherr).
+     Der alte Browser-Stand bleibt als Sicherung im Browser. */
+  const resetId = seed?.meta?.browser_reset_id;
+  if (local && seed && resetId && !IS_AN && !IS_AG && local.meta?.browser_reset_id !== resetId) {
+    try { localStorage.setItem(STORE_KEY + ".sicherung", JSON.stringify(local)); } catch { /* Platz knapp */ }
+    adoptSeed(seed, true);
+    setTimeout(() => toast("Stand aus dem Projektordner geladen.", "ok"), 0);
+  } else if (local && local.schema_version === SCHEMA_VERSION && IS_AN && seed) {
     const merged = structuredClone(seed);
     merged.historie = local.historie || [];
     for (const r of merged.rechnungen) {
@@ -1454,7 +1461,7 @@ function blockFuerLv(p) {
 function lvZeileHtml(p) {
   return `<tr class="lv-offen">
     <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
-    <td class="txt">${esc(p.kurztext || "")}${ersatzHtml(p.oz, p.menge, p.einheit)}</td>
+    <td class="txt">${esc(p.kurztext || "")}${ersatzHtml(p.oz, p.menge, p.einheit)}${p.vermerk ? `<div class="small" style="color:#8a4b00">Hinweis: ${esc(p.vermerk)}</div>` : ""}</td>
     <td class="num">${lvMengeZelle(p.menge, p.oz, p.einheit)}</td>
     <td class="c">${esc(p.einheit || "")}</td>
     <td class="num">–</td><td class="num">${p.ep != null ? eur(p.ep) : "–"}</td><td class="num">–</td>
@@ -1533,7 +1540,7 @@ function rowHtml(i, p, n, lvm, prior) {
   const neuDelta = !ni ? "" : `<div class="small neu-d">${esc(ni.kurz)}: ${fmt(ni.vorher)} → ${ni.delta > 0 ? "+" : ""}${fmt(ni.delta)}</div>`;
   return `<tr class="st-${st || "offen"}${ni ? " neu-pos" : ""}" data-i="${n}">
     <td class="oz">${esc(p.oz)}${akteBadge(p.oz)}</td>
-    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${neuTag}${tag}${esc(p.kurztext)}`}${ersatzHtml(p.oz, lv.menge != null ? lv.menge : p.lv_menge, p.einheit || lv.einheit)}</td>
+    <td class="txt">${ui.edit ? `<input class="t" data-i="${n}" data-f="kurztext" value="${esc(p.kurztext)}">` : `${neuTag}${tag}${esc(p.kurztext)}`}${ersatzHtml(p.oz, lv.menge != null ? lv.menge : p.lv_menge, p.einheit || lv.einheit)}${lv.vermerk ? `<div class="small" style="color:#8a4b00">Hinweis: ${esc(lv.vermerk)}</div>` : ""}</td>
     <td class="num">${lvMengeZelle(p.lv_menge != null ? p.lv_menge : lv.menge, p.oz, p.einheit || lv.einheit)}</td>
     <td class="c">${esc(p.einheit)}</td>
     <td class="num">${ui.edit ? numIn("menge") : fmt(p.menge)}${neuDelta}</td>
