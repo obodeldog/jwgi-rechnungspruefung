@@ -288,6 +288,11 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   .ang tr.alt td { color: var(--muted); }
   .ang .ers, td .ers { color: #8a4b00; margin-top: 3px; }
   .stn-info { font-size: 11px; color: #3b7a3b; margin-top: 3px; cursor: help; }
+  .ant-wrap { margin-top: 6px; padding-top: 5px; border-top: 1px dashed #c9d3e6; }
+  .ant-wrap label { display: block; font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .ant-wrap textarea { background: #eef3ff; border-color: #b9c8ea; }
+  .ant-wrap .ant-text { font-size: 12.5px; white-space: pre-wrap; background: #eef3ff; border: 1px solid #b9c8ea; border-radius: 4px; padding: 4px 6px; }
+  .ant-wrap .ant-stand { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .teil-frei { display: inline-block; margin-top: 4px; padding: 2px 6px; border-radius: 4px;
                background: #fff3cd; color: #7a5200; font-weight: 700; font-size: 11.5px;
                border: 1px solid #f5c542; white-space: nowrap; }
@@ -632,8 +637,8 @@ body:not(.role-auftraggeber) .ag-only { display: none !important; }
   </form>
 </dialog>
 
-<script src="audit_data.enc.js?v=20261103171712" onerror="void 0"></script>
-<script src="audit_data_ag.enc.js?v=20261103171712" onerror="void 0"></script>
+<script src="audit_data.enc.js?v=20261103193640" onerror="void 0"></script>
+<script src="audit_data_ag.enc.js?v=20261103193640" onerror="void 0"></script>
 <script>
 "use strict";
 const PUBLIC_SITE = !window.AUDIT_SEED && !!(window.AUDIT_SEED_ENC || window.AUDIT_SEED_ENC_AG);
@@ -1396,6 +1401,7 @@ function renderFilters() {
     chip("alle", "Alle", i.positionen.length) + chip("gruen", "Grün", c.gruen) + chip("gelb", "Gelb", c.gelb) +
     chip("rot", "Rot", c.rot) + (c[""] ? chip("offen", "offen", c[""]) : "") +
     (READONLY ? "" : chip("beantwortet", "mit Stellungnahme", i.positionen.filter(hasAnswer).length)) +
+    (READONLY ? "" : chip("ohneantwort", "Stellungnahme ohne meine Antwort", i.positionen.filter(p => hasAnswer(p) && !hatAntwort(p)).length)) +
     (nz ? `<span class="neu-sum" title="Gegenüber ${esc(nz.kurz)}: geprüfter Netto-Zuwachs vor Abgebot (gefordert: ${signed(nz.zuwachsGefordert)})">Neu ggü. ${esc(nz.kurz)}: ${nz.neu} Pos. neu, ${nz.mehr} mit Mehrmenge${nz.minder ? `, ${nz.minder} mit Minderung` : ""} · Zuwachs geprüft ${signed(nz.zuwachs)}</span>` : "") +
     `<span style="font-size:12px;color:var(--wahl-head);font-weight:700">Stellungnahmen: ${rf.length - rfOpen} / ${rf.length} Rückfragen beantwortet</span>` +
     `<select id="f-block"><option value="alle">Alle Blöcke</option>${blocksOf(i).map(b => `<option value="${b.id}" ${ui.block === b.id ? "selected" : ""}>${esc(b.titel)}</option>`).join("")}</select>
@@ -1409,6 +1415,7 @@ function renderFilters() {
 function visible(p) {
   if (ui.status === "rueckfrage") { if (!needsAnswer(p) || hasAnswer(p)) return false; }
   else if (ui.status === "beantwortet") { if (!hasAnswer(p)) return false; }
+  else if (ui.status === "ohneantwort") { if (!hasAnswer(p) || hatAntwort(p)) return false; }
   else if (ui.status === "neu") { if (!neuInfo(inv(), p)) return false; }
   else if (ui.status !== "alle" && (ui.status === "offen" ? (p.status || "") !== "" : p.status !== ui.status)) return false;
   if (ui.block !== "alle" && p.block !== ui.block) return false;
@@ -1557,9 +1564,35 @@ function rowHtml(i, p, n, lvm, prior) {
       ${["", "A", "B", "C"].map(s => `<option value="${s}" ${s === (p.kategorie || "") ? "selected" : ""}>${s || "–"}</option>`).join("")}</select></td>
     <td class="kom">${ta("kommentar", "Prüfvermerk …", READONLY)}${READONLY ? "" :
       `<input class="hint no-print" data-i="${n}" data-f="pdf_hinweis" value="${esc(p.pdf_hinweis || "")}" placeholder="PDF-Stempel-Kurzhinweis (leer = automatisch)" title="Kurzhinweis im gestempelten Rechnungs-PDF. Platzhalter: {mehrmenge} {pruef_ep} {pruef_betrag} {diff}">`}</td>
-    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …", IS_AG)}${stnInfo(p)}</td>
+    <td class="wahl">${ta("stellungnahme_an", needsAnswer(p) ? "Bitte Stellungnahme / Raum / Montageort eintragen …" : "Stellungnahme (optional) …", IS_AG)}${stnInfo(p)}${antwortHtml(p, n, ta)}</td>
     ${ui.edit ? `<td class="c"><button class="del" data-act="del" data-i="${n}" title="Position löschen">🗑</button></td>` : ""}
   </tr>`;
+}
+
+/** Antwort JWGI auf die Stellungnahme der Fa. Wahl: Prüfer schreibt, Fa. Wahl und Bauherr lesen. */
+const hatAntwort = p => !!(p.antwort_jwgi || "").trim();
+function antwortHtml(p, n, ta) {
+  if (!IS_AN && !IS_AG) {
+    if (!needsAnswer(p) && !hasAnswer(p) && !hatAntwort(p)) return "";
+    const stand = p.antwort_jwgi_am ? `<div class="ant-stand no-print">gespeichert ${esc(deDT(p.antwort_jwgi_am))}</div>` : "";
+    return `<div class="ant-wrap"><label>Antwort JWGI an Fa. Wahl</label>${ta("antwort_jwgi", "Antwort an Fa. Wahl …", false)}${stand}</div>`;
+  }
+  if (!hatAntwort(p)) return "";
+  return `<div class="ant-wrap"><label>Antwort JWGI${p.antwort_jwgi_am ? " · " + esc(deDT(p.antwort_jwgi_am)) : ""}</label><div class="ant-text">${esc(p.antwort_jwgi)}</div></div>`;
+}
+
+/** Schreibt die Antwort sofort in den Projektordner, damit sie ausgewertet werden kann. */
+async function sendeAntwort(p) {
+  if (READONLY || IS_AN || IS_AG || location.protocol !== "file:" || !db?.projekt?.id) return;
+  try {
+    const r = await fetch(HELFER + "antworten", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: db.projekt.id, rechnung: inv().id, oz: p.oz, text: p.antwort_jwgi || "" }),
+    });
+    const data = await r.json();
+    if (data.ok) { p.antwort_jwgi_am = data.am || p.antwort_jwgi_am; saveLocal(); toast(`Antwort zu ${p.oz} im Projektordner gespeichert.`, "ok"); }
+    else toast("Antwort nicht im Projektordner gespeichert: " + (data.fehler || "unbekannt") + " (im Browser bleibt sie erhalten).", "");
+  } catch { toast("Antwort nur im Browser gespeichert (Projektordner-Helfer nicht erreichbar).", ""); }
 }
 
 /** Datum der letzten Stellungnahme der Fa. Wahl zu dieser Position, bei Änderungen mit Verlauf (Mouseover und Klick auf 💬). */
@@ -1977,7 +2010,8 @@ table.addEventListener("change", e => {
   const fmtLog = v => NUM_FIELDS.has(f) ? fmt(v) : f === "status" ? AMPEL[v || ""] : v;
   logChange(p.oz, f, fmtLog(el.dataset.old), fmtLog(p[f]));
   el.dataset.old = p[f];
-  if (f === "stellungnahme_an") renderFilters();
+  if (f === "stellungnahme_an" || f === "antwort_jwgi") renderFilters();
+  if (f === "antwort_jwgi") sendeAntwort(p);
   touch();
 });
 table.addEventListener("keydown", e => {
